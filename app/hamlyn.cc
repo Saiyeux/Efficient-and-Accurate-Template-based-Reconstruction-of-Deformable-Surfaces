@@ -8,13 +8,14 @@
 
 
 
+
 #include <Eigen/Core>
 
 // Namespace to nullify use of cv::function(); syntax
 using namespace std;
 using namespace cv;
 
-void readObj(std::vector<double> &xyz, int &number_vertices) {
+void readObj(std::vector<double> &xyz, std::vector<int> &faces, int &number_vertices, int &number_faces) {
     std::string file_path = "../data/Hamlyn/ReferenceMesh2.obj";
     // std::vector<double> points;
     // Dateistream-Objekt zum Lesen der Objektdatei erstellen
@@ -32,7 +33,9 @@ void readObj(std::vector<double> &xyz, int &number_vertices) {
     std::getline(obj_file, line);
     std::getline(obj_file, line);
     std::stringstream sstream(line);
+    std::istringstream iss;
     std::string word;
+    std::string token;
     sstream >> word;sstream >> word;
     sstream >> word;
     sstream >> word;sstream >> word;
@@ -48,12 +51,12 @@ void readObj(std::vector<double> &xyz, int &number_vertices) {
     sstream >> word;
     sstream >> word;sstream >> word;
     // std::cout << word << std::endl;
-    int number_faces = stoi(word);
+    number_faces = stoi(word);
 
     // std::cout << number << std::endl;
     
     // double points[number_vertices * 3];
-    double faces[number_faces * 3];
+    // double faces[number_faces * 3];
     int idx_points = 0;
     while (std::getline(obj_file, line)) {
         if(line[0] != 'v' && line[0] != 'f')
@@ -77,7 +80,26 @@ void readObj(std::vector<double> &xyz, int &number_vertices) {
             xyz.push_back(z);
             idx_points++;
         } else if(line[0] == 'f') {
-            // Todo!
+            sstream.str(line);
+            sstream.seekg(0);
+            sstream.seekp(0);
+            sstream >> word;sstream >> word;
+            iss.str(word);
+            std::getline(iss, token, '/');
+            int f1 = stoi(token);
+            sstream >> word;
+            iss.str(word);
+            
+            std::getline(iss, token, '/');
+            int f2 = stoi(token);
+            sstream >> word;
+            iss.str(word);
+            
+            std::getline(iss, token, '/');
+            int f3 = stoi(token);
+            faces.push_back(f1);
+            faces.push_back(f2);
+            faces.push_back(f3);
         }
         // std::cout << line[0] == 'v' << std::endl;
         // std::cout << line << std::endl;
@@ -103,7 +125,13 @@ void readObj(std::vector<double> &xyz, int &number_vertices) {
 
 int main()
 {
+    Mat pre_frame, cur_frame, pre_frame_gray, cur_frame_gray;
+    
     VideoCapture cap("../data/Hamlyn/output.mp4");
+    if (!cap.isOpened())
+    {
+        cout << "Error opening video stream or file" << endl;
+    }
     Eigen::Matrix3d K;
     K <<    391.656525, 0.000000, 165.964371,
             0.000000, 426.835144, 154.498138,
@@ -113,11 +141,32 @@ int main()
     double cx = K(0,2);
     double cy = K(1,2);
     std::vector<double> xyz;
-    int number_vertices;
+    std::vector<int> faces;
+    int number_vertices, number_faces;
 
     // Read Object file
-    readObj(xyz, number_vertices);
+    readObj(xyz, faces, number_vertices, number_faces);
+    int frameWidth = 360;
+    int frameHeight = 288;
+    int frameRate = 30;
+
+    // Erstellen Sie einen VideoWriter, um das Video zu schreiben
+    cv::VideoWriter video("output.avi", cv::VideoWriter::fourcc('M','J','P','G'), frameRate, cv::Size(frameWidth,frameHeight));
+
+
+    cap >> pre_frame;
+
+    // creating a mask
     
+    cv::Mat hsvImage;
+    cv::cvtColor(pre_frame, hsvImage, cv::COLOR_BGR2HSV);
+    std::vector<cv::Mat> channels;
+    cv::split(hsvImage, channels);
+    cv::Mat pre_processing_mask;
+    int thresholdValue = 30; // Passen Sie den Schwellenwert nach Bedarf an
+    cv::threshold(channels[2], pre_processing_mask, thresholdValue, 255, cv::THRESH_BINARY);
+    cv::imshow("Helligkeitsschwellenwert", pre_processing_mask);
+    // cv::waitKey(0);
 
     // create reference observation
     
@@ -134,27 +183,24 @@ int main()
         double u = fx*x/z + cx;
         double v = fy*y/z + cy;
         // p0.push_back(cv::Point2d(u,v));
-        if(u < 0 || v < 0 || u > 360 || v > 288) {
+        if(u < 2 || v < 5 || u > 360 || v > 288) {
             std::cerr << "Error, u or v is not in the boarder" << std::endl;
             error_counter++;
             continue;
         }
-        p0.push_back(cv::Point2d(u,v));
+        if (pre_processing_mask.at<uchar>(int(v),int(u)) == 255)
+            p0.push_back(cv::Point2d(u,v));
 
     }
 
 
-    VideoCapture cap("../data/Hamlyn/output.mp4");
+    // VideoCapture cap("../data/Hamlyn/output.mp4");
         
     // Print error message if the stream is invalid
-    if (!cap.isOpened())
-    {
-        cout << "Error opening video stream or file" << endl;
-    }
+    
     
  
-    Mat pre_frame, cur_frame, pre_frame_gray, cur_frame_gray;
-    cap >> pre_frame;
+    
     cvtColor(pre_frame, pre_frame_gray, COLOR_BGR2GRAY);
 
     Mat mask = Mat::zeros(pre_frame_gray.size(), pre_frame_gray.type());
@@ -191,8 +237,9 @@ int main()
         }
         
         imshow("Frame", cur_frame);
+        // video.write(cur_frame);
         //wait 20 ms between successive frames and break the loop if key q is pressed
-        int key = waitKey(100);
+        int key = waitKey(50);
         if (key == 'q')
         {
             cout << "q key is pressed by the user. Stopping the video" << endl;

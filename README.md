@@ -1,6 +1,7 @@
 <h1> Sparse Template Based Reconstruction </h1>
 
 ## Overview
+![Alternativer Text](./data/image.png)
 
 
 ### Features
