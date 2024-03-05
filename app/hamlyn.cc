@@ -131,7 +131,7 @@ void constructSmask( sba_crsm& Sidxij, int m, int& m_nS, char* m_smask)//, sba_c
 }
 
 void readObj(std::vector<double> &xyz, std::vector<int> &faces, int &number_vertices, int &number_faces) {
-    std::string file_path = "../data/Hamlyn/ReferenceMesh2.obj";
+    std::string file_path = "../data/Hamlyn/dense reconstruction5.obj";//ReferenceMesh2.obj";
     // std::vector<double> points;
     // Dateistream-Objekt zum Lesen der Objektdatei erstellen
     std::ifstream obj_file(file_path);
@@ -280,9 +280,9 @@ void compute_reprojection_error(double *e, double *obs, double *xyz, int *faces,
 }
 
 inline void storeInG_distance(double *g, double *J, double *e) {
-    g[0] += J[0]*e[0];
-    g[1] += J[1]*e[0];
-    g[2] += J[2]*e[0];
+    g[0] += -J[0]*e[0];
+    g[1] += -J[1]*e[0];
+    g[2] += -J[2]*e[0];
 
 }
 
@@ -451,9 +451,9 @@ void compute_distance_error(double *error, double *xyz, double *ref,int *faces, 
 }
 
 inline void storeInG(double *g, double *J, double *e) {
-    g[0] += J[0] * e[0] + J[3] * e[1];
-    g[1] += J[1] * e[0] + J[4] * e[1];
-    g[2] += J[2] * e[0] + J[5] * e[1];
+    g[0] += -(J[0] * e[0] + J[3] * e[1]);
+    g[1] += -(J[1] * e[0] + J[4] * e[1]);
+    g[2] += -(J[2] * e[0] + J[5] * e[1]);
     // cout << g[0] << " " << g[1] << " "<< g[2] << endl;
     // cout << "" <<endl;
 }
@@ -1005,9 +1005,9 @@ int main()
     // std::cout << counter << std::endl;
 
     // creating observable points
-    double alp[] = {0,0,1,0.3333};
-    double bet[] = {0,1,0,0.3333};
-    double gam[] = {1,0,0,0.3333};
+    double alp[] = {0,0,1,0.3333,0.1,0.1,0.8};
+    double bet[] = {0,1,0,0.3333,0.1,0.8,0.1};
+    double gam[] = {1,0,0,0.3333,0.8,0.1,0.1};
 
 
 
@@ -1020,7 +1020,7 @@ int main()
         int f2 = new_faces[face_id*3+1];
         int f3 = new_faces[face_id*3+2];
         
-        for(int id=0; id<4;id++) {
+        for(int id=0; id<7;id++) {
             double v1[] = {vertices[f1*3 + 0], vertices[f1*3 + 1], vertices[f1*3 + 2]};
             double v2[] = {vertices[f2*3 + 0], vertices[f2*3 + 1], vertices[f2*3 + 2]};
             double v3[] = {vertices[f3*3 + 0], vertices[f3*3 + 1], vertices[f3*3 + 2]};
@@ -1028,7 +1028,8 @@ int main()
             double alpha = alp[id];
             double beta = bet[id];
             double gamma = gam[id];
-
+            if ((alpha +beta+gamma >1) || (alpha +beta+gamma < 0))
+                return 1;
             double p[3] = { v1[0] * alpha + v2[0]*beta + v3[0]*gamma,
                             v1[1] * alpha + v2[1]*beta + v3[1]*gamma,
                             v1[2] * alpha + v2[2]*beta + v3[2]*gamma};
@@ -1046,7 +1047,8 @@ int main()
             obs.push_back(alpha);
             obs.push_back(beta);
             obs.push_back(gamma);
-            p0.push_back(cv::Point2d(int(u),(v)));
+            p0.push_back(cv::Point2f(int(u),(v)));
+            cout << int(u) << " " << int(v) << " " << int(f1) << " " << int(f2) << " " << int(f3) << endl;
             num_obs++;
         }
     }
@@ -1101,6 +1103,10 @@ int main()
     // for(int i=0;i<num_faces;i++) {
     //     std::cout << new_faces[i] << std::endl;
     // }exit(1);
+    // double pts[num_points*3];
+    for(int i=0; i< num_points*3; i++) {
+            vertices[i] += 1*i;
+        }
 
     while (1)
     {
@@ -1122,10 +1128,13 @@ int main()
 
         // std::cout << status.size() << std::endl;
         for(int i=0; i< num_obs; i++) {
-            obs[i*6+1] = double(p1[i].x);
-            obs[i*6+2] = double(p1[i].y);
+            // obs[i*6+1] = double(p1[i].x); // was ist die zahlen einheit?? ist die zahl richtig?
+            // obs[i*6+2] = double(p1[i].y);
             
         }
+        // for(int i=0; i< num_points*3; i++) {
+        //     vertices[i] += 0.1;
+        // }
 
         for(uint i = 0; i < p0.size(); i++)
         {
@@ -1152,34 +1161,7 @@ int main()
             compute_distance_jacobian(V,g,error, vertices, new_faces.data(), num_faces, num_obs, Sidxij);
 
 
-            //double ed = 0;
-            // for(int i=(num_obs*2); i < ((num_obs*2) + (num_faces*3)); i++) {
-            //     //ed += error[(num_obs*2)+i] * error[(num_obs*2)+i];
-            //     cout << error[i] << endl;
-            // }
-            // exit(1);
-            // for(int i=0; i< (num_obs*2+num_faces*3);i++) {
-            //     std::cout << error[i] << std::endl;
-            // } exit(1);
-            // double cost1;
-            // for(int i=0; i < ((num_obs*2) + (num_faces*3)); i++) {
-            //     cost1 += error[i] * error[i];
-            // }
-            // cost1 /= ((num_obs*2) + (num_faces*3));
-            // std::cout << "Error: " << cost1 << std::endl;
-            // std::cout  << num_points << std::endl;
-
-            // int pos = sba_crsm_elmidx(&Sidxij,0, 0);
-            // if(pos == -1)
-            //     cout << "kacke";
-            // double *pp = V + pos*3*3;
-            // for(int i=0;i < 3; i++) {
-            //     for(int j =0; j<3;j++) {
-            //        std::cout << pp[i*3 + j]<< " "; 
-            //     }
-            //     std::cout << "\n";
-
-            // } exit(1);
+        
             constructCSSGN( Si, Sp, Sx, V, Sidxij, init, v_mask, num_points); //set CSS format using S matrix
             for(int ii=0; ii< num_points*3; ii++) {
                 Ex[ii] = g[ii];
@@ -1220,6 +1202,8 @@ int main()
             cost /= ((num_obs*2) + (num_faces*3));
             std::cout << "Itertation: " << iter <<" Error: " << cost << " dx: " << dx / num_points <<" er: " << er << " ed: " << ed << std::endl;
 
+            if((cost < 0.0001) || (dx < 0.0001))
+                break;
         }
         
         imshow("Frame", cur_frame);
