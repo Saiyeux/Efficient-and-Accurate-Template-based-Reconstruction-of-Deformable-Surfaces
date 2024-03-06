@@ -46,7 +46,7 @@ message(STATUS "Use Eigen")
 # include_directories(${Open3D_INCLUDE_DIRS})
 
 # Füge die ausführbare Datei hinzu
-add_executable(hamlyn app/hamlyn.cc)
+add_executable(hamlyn app/hamlyn.cc app/objReader.cc app/objReader.h app/helper.cc app/helper.h)
 target_link_libraries(hamlyn PRIVATE 
                                 ${OpenCV_LIBS}
                                 opencv_imgcodecs

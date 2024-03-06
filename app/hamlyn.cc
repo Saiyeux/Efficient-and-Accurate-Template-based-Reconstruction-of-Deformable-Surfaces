@@ -1,3 +1,5 @@
+#include "objReader.h"
+#include "helper.h"
 // Include Libraries
 #include <opencv2/opencv.hpp>
 
@@ -6,10 +8,6 @@
 #include <fstream>
 #include <sstream>
 #include <map>
-
-
-
-
 #include <Eigen/Core>
 #include "suitesparse/cholmod.h"
 
@@ -130,112 +128,7 @@ void constructSmask( sba_crsm& Sidxij, int m, int& m_nS, char* m_smask)//, sba_c
 	// return nuis;
 }
 
-void readObj(std::vector<double> &xyz, std::vector<int> &faces, int &number_vertices, int &number_faces) {
-    std::string file_path = "../data/Hamlyn/dense reconstruction5.obj";//ReferenceMesh2.obj";
-    // std::vector<double> points;
-    // Dateistream-Objekt zum Lesen der Objektdatei erstellen
-    std::ifstream obj_file(file_path);
 
-    // Überprüfen, ob die Datei erfolgreich geöffnet wurde
-    if (!obj_file.is_open()) {
-        std::cerr << "Incorrect path to the Obj-file." << std::endl;
-        return;
-    }
-
-    // Lesen und Ausgabe des Inhalts der Objektdatei
-    std::string line;
-    std::getline(obj_file, line);
-    std::getline(obj_file, line);
-    std::getline(obj_file, line);
-    std::stringstream sstream(line);
-    std::istringstream iss;
-    std::string word;
-    std::string token;
-    sstream >> word;sstream >> word;
-    sstream >> word;
-    sstream >> word;sstream >> word;
-    // std::cout << word << std::endl;
-    number_vertices = stoi(word);
-
-    std::getline(obj_file, line);
-    sstream.str(line);
-    sstream.seekg(0);
-    sstream.seekp(0);
-    // std::stringstream sstream(line);
-    sstream >> word;sstream >> word;
-    sstream >> word;
-    sstream >> word;sstream >> word;
-    // std::cout << word << std::endl;
-    number_faces = stoi(word);
-
-    // std::cout << number << std::endl;
-    
-    // double points[number_vertices * 3];
-    // double faces[number_faces * 3];
-    int idx_points = 0;
-    while (std::getline(obj_file, line)) {
-        if(line[0] != 'v' && line[0] != 'f')
-            continue;
-        if(line[1] == 'n')
-            continue;
-            
-        if (line[0] == 'v'){
-            // std::stringstream sstream(line);
-            sstream.str(line);
-            sstream.seekg(0);
-            sstream.seekp(0);
-            sstream >> word;sstream >> word;
-            double x = stod(word);
-            sstream >> word;
-            double y = stod(word);
-            sstream >> word;
-            double z = stod(word);
-            xyz.push_back(x);
-            xyz.push_back(y);
-            xyz.push_back(z);
-            idx_points++;
-        } else if(line[0] == 'f') {
-            sstream.str(line);
-            sstream.seekg(0);
-            sstream.seekp(0);
-            sstream >> word;sstream >> word;
-            iss.str(word);
-            std::getline(iss, token, '/');
-            int f1 = stoi(token);
-            sstream >> word;
-            iss.str(word);
-            
-            std::getline(iss, token, '/');
-            int f2 = stoi(token);
-            sstream >> word;
-            iss.str(word);
-            
-            std::getline(iss, token, '/');
-            int f3 = stoi(token);
-            faces.push_back(f1);
-            faces.push_back(f2);
-            faces.push_back(f3);
-        }
-        // std::cout << line[0] == 'v' << std::endl;
-        // std::cout << line << std::endl;
-        // std::stringstream sstream(line);
-  		// std::string word;
-
-        // while(sstream >> word) {
-        //     std::cout << word << std::endl;
-        // }
-        
-    }
-    
-    // double *tmp = points.data();
-    // xyz = tmp;
-    // Schließen der Datei
-    obj_file.close();
-    // for (int i = 0; i< 1680; i++) {
-    //     std::cout << xyz[i*3 + 0] << " " << xyz[i*3 + 1] << " " << xyz[i*3 + 2] << " " << std::endl;  
-    // }
-    // exit(1);
-}
 
 void compute_reprojection_error(double *e, double *obs, double *xyz, int *faces, Eigen::Matrix3d &K, int num_obs) {
     for(int obs_id=0; obs_id < num_obs; obs_id++) {
@@ -825,7 +718,7 @@ int main()
     std::vector<double> xyz;
     std::vector<int> faces;
     std::vector<int> new_faces;
-    std::map<int,int> mapping;
+    
     int number_vertices, number_faces;
 
     // Read Object file
@@ -852,124 +745,33 @@ int main()
     cv::cvtColor(pre_frame, hsvImage, cv::COLOR_BGR2HSV);
     std::vector<cv::Mat> channels;
     cv::split(hsvImage, channels);
-    cv::Mat pre_processing_mask;
+    cv::Mat preprocess_mask;
     int thresholdValue = 30; // Passen Sie den Schwellenwert nach Bedarf an
-    cv::threshold(channels[2], pre_processing_mask, thresholdValue, 255, cv::THRESH_BINARY);
-    cv::imshow("Helligkeitsschwellenwert", pre_processing_mask);
+    cv::threshold(channels[2], preprocess_mask, thresholdValue, 255, cv::THRESH_BINARY);
+    cv::imshow("Helligkeitsschwellenwert", preprocess_mask);
     // cv::waitKey(0);
 
     // preprocessing
-    
     std::vector<cv::Point2f> p0;// = {point0, cv::Point2f(180,140), cv::Point2f(200, 200)};
-    int error_counter=0;
     bool usable_point[number_vertices];
-    int num_points = 0;
-    for (int i = 0; i< number_vertices; i++) {
-        usable_point[i] = false;
-        double x = xyz[i*3 + 0];
-        double y = xyz[i*3 + 1];
-        double z = xyz[i*3 + 2];
-        // if (z < 50) {
-        //     std::cout <<" asad\n";
-        // }
-        
-        double u = fx*x/z + cx;
-        double v = fy*y/z + cy;
-        // p0.push_back(cv::Point2d(u,v));
-        // also masking here!
-        if(u < 2 || v < 5 || u > 360 || v > 288) {
-            // std::cerr << "Error, u or v is not in the boarder" << std::endl;
-            // std::cout << u << " " << v << std::endl;
-            error_counter++;
-            continue;
-        }
-        if (pre_processing_mask.at<uchar>(int(v),int(u)) == 255) {
-            // p0.push_back(cv::Point2d(u,v));
-            usable_point[i] = true;
-            num_points++;
-        }
 
-    }
+    verifyPoints(xyz, usable_point, number_vertices, K, preprocess_mask);
+    
+    int num_points = number_vertices;
 
     // fixing faces and points
     // char* v_mask = (char*)malloc(num_points*num_points*sizeof(char)); // v_mask initialisieren!
     // memset( v_mask, 0, num_points*num_points*sizeof(char) );
     bool usabale_faces[number_faces];
     int num_faces = 0;
+    double *vertices;
+    // remapping(faces, vertices, usabale_faces, number_faces);
+    remapping(xyz, faces, vertices, usabale_faces, usable_point, number_faces, num_points);
+    double *reference;
+    for(int i=0;i<num_points;i++)
+        reference[i] = vertices[i];
 
-    for(int i=0;i<number_faces;i++) {
-        usabale_faces[i] = false;
-        int f1 = faces[i*3];
-        int f2 = faces[i*3+1];
-        int f3 = faces[i*3+2];
-
-        if(usable_point[f1] && usable_point[f2] && usable_point[f3]) {
-            usabale_faces[i] = true;
-            num_faces++;
-            // v_mask[f1*num_points + f1] = 1;
-            mapping[f1] = 0;
-            mapping[f2] = 0;
-            mapping[f3] = 0;
-            
-        } 
-    }
-    // std::cout << mapping.size() << std::endl;
-
-    int counter = 0;
-    for (auto& mapp : mapping) {
-        mapp.second = counter;
-        counter++;
-    }
-    // std::cout << num_points << std::endl;
-    // exit(1);
-    num_points = counter;
-    double vertices[num_points*3];
-    double reference[num_points*3];
-    // counter = 0;
-    for(int i=0;i<number_faces;i++) {
-        if(usabale_faces[i]) {
-            int f1 = faces[i*3];
-            int f2 = faces[i*3+1];
-            int f3 = faces[i*3+2];    
-            
-            int f1_new = mapping[f1];
-            int f2_new = mapping[f2];
-            int f3_new = mapping[f3];
-            // counter++;
-            // if ((f1_new >= 2575) || (f2_new >= 2575) || (f3_new >= 2575))
-            //     counter++;
-            new_faces.push_back(f1_new);
-            new_faces.push_back(f2_new);
-            new_faces.push_back(f3_new);
-
-            vertices[f1_new*3] = xyz[f1*3];
-            vertices[f1_new*3+1] = xyz[f1*3+1];
-            vertices[f1_new*3+2] = xyz[f1*3+2];
-
-            vertices[f2_new*3] = xyz[f2*3];
-            vertices[f2_new*3+1] = xyz[f2*3+1];
-            vertices[f2_new*3+2] = xyz[f2*3+2];
-
-            vertices[f3_new*3] = xyz[f3*3];
-            vertices[f3_new*3+1] = xyz[f3*3+1];
-            vertices[f3_new*3+2] = xyz[f3*3+2];
-
-            reference[f1_new*3] = xyz[f1*3];
-            reference[f1_new*3+1] = xyz[f1*3+1];
-            reference[f1_new*3+2] = xyz[f1*3+2];
-
-            reference[f2_new*3] = xyz[f2*3];
-            reference[f2_new*3+1] = xyz[f2*3+1];
-            reference[f2_new*3+2] = xyz[f2*3+2];
-
-            reference[f3_new*3] = xyz[f3*3];
-            reference[f3_new*3+1] = xyz[f3*3+1];
-            reference[f3_new*3+2] = xyz[f3*3+2];
-
-            
-        }
-    }
-
+    num_faces = number_faces;
     // std::cout << num_points << std::endl;
     // exit(1);
     char* v_mask = (char*)malloc(num_points*num_points*sizeof(char)); // v_mask initialisieren!
@@ -1048,7 +850,7 @@ int main()
             obs.push_back(beta);
             obs.push_back(gamma);
             p0.push_back(cv::Point2f(int(u),(v)));
-            cout << int(u) << " " << int(v) << " " << int(f1) << " " << int(f2) << " " << int(f3) << endl;
+            cout << (u) << " " << (v) << " " << int(f1) << " " << int(f2) << " " << int(f3) << endl;
             num_obs++;
         }
     }
@@ -1105,7 +907,7 @@ int main()
     // }exit(1);
     // double pts[num_points*3];
     for(int i=0; i< num_points*3; i++) {
-            vertices[i] += 1*i;
+            vertices[i] += 0.00*i;
         }
 
     while (1)
@@ -1128,8 +930,8 @@ int main()
 
         // std::cout << status.size() << std::endl;
         for(int i=0; i< num_obs; i++) {
-            // obs[i*6+1] = double(p1[i].x); // was ist die zahlen einheit?? ist die zahl richtig?
-            // obs[i*6+2] = double(p1[i].y);
+            obs[i*6+1] = double(p1[i].x); // was ist die zahlen einheit?? ist die zahl richtig?
+            obs[i*6+2] = double(p1[i].y);
             
         }
         // for(int i=0; i< num_points*3; i++) {
