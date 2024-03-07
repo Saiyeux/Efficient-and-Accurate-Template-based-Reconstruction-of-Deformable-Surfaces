@@ -39,6 +39,11 @@ find_package(Eigen3 3.3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 message(STATUS "Use Eigen")
 
+find_package(Pangolin REQUIRED)
+message(STATUS "Pangolin found")
+include_directories(${Pangolin_INCLUDE_DIR})
+
+
 # Finde die Open3D-Bibliothek
 # find_package(Open3D REQUIRED)
 
@@ -46,7 +51,12 @@ message(STATUS "Use Eigen")
 # include_directories(${Open3D_INCLUDE_DIRS})
 
 # Füge die ausführbare Datei hinzu
-add_executable(hamlyn app/hamlyn.cc app/objReader.cc app/objReader.h app/helper.cc app/helper.h)
+add_executable(hamlyn app/hamlyn.cc app/objReader.cc app/objReader.h app/helper.cc app/helper.h app/MapViewer.h app/MapViewer.cc)
+
+# target_include_directories(${PROJECT_NAME}
+#                               PUBLIC
+#                               ${Pangolin_INCLUDE_DIR})
+
 target_link_libraries(hamlyn PRIVATE 
                                 ${OpenCV_LIBS}
                                 opencv_imgcodecs
@@ -54,6 +64,7 @@ target_link_libraries(hamlyn PRIVATE
                                 opencv_core
                                 opencv_features2d
                                 opencv_calib3d
+                                pangolin
                                 ${CHOLMOD_LIBRARIES} 
                                 ${BLAS_LIBRARIES}
                                 ${LAPACK_LIBRARIES}

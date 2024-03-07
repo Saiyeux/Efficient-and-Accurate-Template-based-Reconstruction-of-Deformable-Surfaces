@@ -1,5 +1,6 @@
 #include "objReader.h"
 #include "helper.h"
+#include "MapViewer.h"
 // Include Libraries
 #include <opencv2/opencv.hpp>
 
@@ -10,6 +11,9 @@
 #include <map>
 #include <Eigen/Core>
 #include "suitesparse/cholmod.h"
+
+
+#include <random>
 
 // Namespace to nullify use of cv::function(); syntax
 using namespace std;
@@ -253,29 +257,29 @@ void compute_distance_jacobian(double *V, double *g, double *error, double *xyz,
 
         double J12_1[3], J12_2[3], J13_1[3], J13_3[3], J23_2[3], J23_3[3];
 
-        J12_1[0] = v12[0] / (d12 + 0.0000001);
-        J12_1[1] = v12[1] / (d12 + 0.0000001);
-        J12_1[2] = v12[2] / (d12 + 0.0000001);
+        J12_1[0] = v12[0] / (d12);
+        J12_1[1] = v12[1] / (d12);
+        J12_1[2] = v12[2] / (d12);
 
-        J13_1[0] = v13[0] / (d13 + 0.0000001);
-        J13_1[1] = v13[1] / (d13 + 0.0000001);
-        J13_1[2] = v13[2] / (d13 + 0.0000001);
+        J13_1[0] = v13[0] / (d13);
+        J13_1[1] = v13[1] / (d13);
+        J13_1[2] = v13[2] / (d13);
 
-        J23_2[0] = v23[0] / (d23 + 0.0000001);
-        J23_2[1] = v23[1] / (d23 + 0.0000001);
-        J23_2[2] = v23[2] / (d23 + 0.0000001);
+        J23_2[0] = v23[0] / (d23);
+        J23_2[1] = v23[1] / (d23);
+        J23_2[2] = v23[2] / (d23);
 
-        J12_2[0] = -v12[0] / (d12 + 0.0000001);
-        J12_2[1] = -v12[1] / (d12 + 0.0000001);
-        J12_2[2] = -v12[2] / (d12 + 0.0000001);
+        J12_2[0] = -v12[0] / (d12);
+        J12_2[1] = -v12[1] / (d12);
+        J12_2[2] = -v12[2] / (d12);
 
-        J13_3[0] = -v13[0] / (d13 + 0.0000001);
-        J13_3[1] = -v13[1] / (d13 + 0.0000001);
-        J13_3[2] = -v13[2] / (d13 + 0.0000001);
-
-        J23_3[0] = -v23[0] / (d23 + 0.0000001);
-        J23_3[1] = -v23[1] / (d23 + 0.0000001);
-        J23_3[2] = -v23[2] / (d23 + 0.0000001);
+        J13_3[0] = -v13[0] / (d13);
+        J13_3[1] = -v13[1] / (d13);
+        J13_3[2] = -v13[2] / (d13);
+        
+        J23_3[0] = -v23[0] / (d23);
+        J23_3[1] = -v23[1] / (d23);
+        J23_3[2] = -v23[2] / (d23);
 
         storeInG_distance(g+f1*3, J12_1, error + offset*2 + counter);
         storeInG_distance(g+f2*3, J12_2, error + offset*2 + counter);
@@ -701,6 +705,9 @@ bool solveCholmodGN( int* Ap, int* Aii, bool init, bool ordering, int m_ncams, i
 int main()
 {
     Mat pre_frame, cur_frame, pre_frame_gray, cur_frame_gray;
+    MapViewer t;
+    t.run();
+    // return 1;
     
     VideoCapture cap("../data/Hamlyn/output.mp4");
     if (!cap.isOpened())
@@ -717,7 +724,6 @@ int main()
     double cy = K(1,2);
     std::vector<double> xyz;
     std::vector<int> faces;
-    std::vector<int> new_faces;
     
     int number_vertices, number_faces;
 
@@ -746,7 +752,7 @@ int main()
     std::vector<cv::Mat> channels;
     cv::split(hsvImage, channels);
     cv::Mat preprocess_mask;
-    int thresholdValue = 30; // Passen Sie den Schwellenwert nach Bedarf an
+    int thresholdValue = 0; // Passen Sie den Schwellenwert nach Bedarf an
     cv::threshold(channels[2], preprocess_mask, thresholdValue, 255, cv::THRESH_BINARY);
     cv::imshow("Helligkeitsschwellenwert", preprocess_mask);
     // cv::waitKey(0);
@@ -754,24 +760,33 @@ int main()
     // preprocessing
     std::vector<cv::Point2f> p0;// = {point0, cv::Point2f(180,140), cv::Point2f(200, 200)};
     bool usable_point[number_vertices];
+    int num_points = 0;
 
-    verifyPoints(xyz, usable_point, number_vertices, K, preprocess_mask);
+    num_points = verifyPoints(xyz, usable_point, number_vertices, K, preprocess_mask);
     
-    int num_points = number_vertices;
 
     // fixing faces and points
     // char* v_mask = (char*)malloc(num_points*num_points*sizeof(char)); // v_mask initialisieren!
     // memset( v_mask, 0, num_points*num_points*sizeof(char) );
     bool usabale_faces[number_faces];
     int num_faces = 0;
-    double *vertices;
-    // remapping(faces, vertices, usabale_faces, number_faces);
-    remapping(xyz, faces, vertices, usabale_faces, usable_point, number_faces, num_points);
-    double *reference;
-    for(int i=0;i<num_points;i++)
-        reference[i] = vertices[i];
+    double vertices[num_points*3];
+    double reference[num_points*3];
 
-    num_faces = number_faces;
+    // remapping(faces, vertices, usabale_faces, number_faces);
+    std::vector<int> new_faces;
+    num_faces = remapping(xyz, faces, new_faces, vertices, usabale_faces, usable_point, number_faces, num_points);
+
+    // double vertices[num_points*3];
+    
+    for(int i=0;i<num_points*3;i++) {
+        // std::cout << i << std::endl;
+        // std::cout << vert[i] << std::endl;
+        reference[i] = vertices[i];
+        // vertices[i] = vert[i];
+    }
+// exit(1);
+    // num_faces = number_faces;
     // std::cout << num_points << std::endl;
     // exit(1);
     char* v_mask = (char*)malloc(num_points*num_points*sizeof(char)); // v_mask initialisieren!
@@ -807,11 +822,17 @@ int main()
     // std::cout << counter << std::endl;
 
     // creating observable points
-    double alp[] = {0,0,1,0.3333,0.1,0.1,0.8};
-    double bet[] = {0,1,0,0.3333,0.1,0.8,0.1};
-    double gam[] = {1,0,0,0.3333,0.8,0.1,0.1};
+    // double alp[] = {0,0,1,0.3333,0.1,0.1,0.8};
+    // double bet[] = {0,1,0,0.3333,0.1,0.8,0.1};
+    // double gam[] = {1,0,0,0.3333,0.8,0.1,0.1};
 
+    // double alp[] = {0,0,1,0.3333};
+    // double bet[] = {0,1,0,0.3333};
+    // double gam[] = {1,0,0,0.3333};
 
+    double alp[] = {0.3333,0.1,0.1,0.8};
+    double bet[] = {0.3333,0.1,0.8,0.1};
+    double gam[] = {0.3333,0.8,0.1,0.1};
 
     std::vector<double> obs;
     int num_obs = 0;
@@ -822,7 +843,7 @@ int main()
         int f2 = new_faces[face_id*3+1];
         int f3 = new_faces[face_id*3+2];
         
-        for(int id=0; id<7;id++) {
+        for(int id=0; id<4;id++) {
             double v1[] = {vertices[f1*3 + 0], vertices[f1*3 + 1], vertices[f1*3 + 2]};
             double v2[] = {vertices[f2*3 + 0], vertices[f2*3 + 1], vertices[f2*3 + 2]};
             double v3[] = {vertices[f3*3 + 0], vertices[f3*3 + 1], vertices[f3*3 + 2]};
@@ -906,9 +927,16 @@ int main()
     //     std::cout << new_faces[i] << std::endl;
     // }exit(1);
     // double pts[num_points*3];
-    for(int i=0; i< num_points*3; i++) {
-            vertices[i] += 0.00*i;
-        }
+
+    // Zufallsgenerator initialisieren
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<double> dis(0.0, 1.0); // Verteilung zwischen 0.0 und 1.0
+
+    // Zufälligen double-Wert erzeugen
+    double random_value = dis(gen);
+
+    
 
     while (1)
     {
@@ -949,6 +977,14 @@ int main()
             }
         }
 
+        // static int mult = 0;
+        // for(int i=0; i< num_points*3; i++) {
+        // double random_value = dis(gen);
+    
+        //     vertices[i] = reference[i] + random_value*mult;
+        // }
+        // mult += 100;
+
         //optimization
         for (int iter=1;iter<10;iter++) {
             memset( error, 0, (((num_obs*2) + (num_faces*3))*sizeof(double) ));
@@ -982,13 +1018,13 @@ int main()
                 exit(1);
             }
             double dx = 0;
-            for(int i=0; i < num_points; i++) {
+            for(int i=0; i < num_points*3; i++) {
                 vertices[i] += rx[i];
                 dx += rx[i]*rx[i];
             }
             double cost = 0;
             for(int i=0; i < ((num_obs*2) + (num_faces*3)); i++) {
-                cost += error[i] * error[i];
+                cost += (error[i] * error[i]);
             }
             double er=0;
             for(int i=0; i < ((num_obs*2)); i++) {
@@ -1002,7 +1038,7 @@ int main()
             ed /= num_faces*3;
             
             cost /= ((num_obs*2) + (num_faces*3));
-            std::cout << "Itertation: " << iter <<" Error: " << cost << " dx: " << dx / num_points <<" er: " << er << " ed: " << ed << std::endl;
+            std::cout << "Itertation: " << iter <<" Error: " << sqrt(cost) << " dx: " << dx / num_points <<" er: " << er << " ed: " << ed << std::endl;
 
             if((cost < 0.0001) || (dx < 0.0001))
                 break;
@@ -1011,7 +1047,7 @@ int main()
         imshow("Frame", cur_frame);
         // video.write(cur_frame);
         //wait 20 ms between successive frames and break the loop if key q is pressed
-        int key = waitKey(1000);
+        int key = waitKey(1);
         if (key == 'q')
         {
             cout << "q key is pressed by the user. Stopping the video" << endl;

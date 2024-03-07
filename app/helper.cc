@@ -1,7 +1,8 @@
 #include "helper.h"
 #include <map>
+#include <memory>
 
-void verifyPoints(std::vector<double> &xyz, bool *usable_point, int &number_vertices, Eigen::Matrix3d K, cv::Mat mask) {
+int verifyPoints(std::vector<double> &xyz, bool *usable_point, int &number_vertices, Eigen::Matrix3d K, cv::Mat mask) {
 
     double fx = K(0,0);
     double fy = K(1,1);
@@ -26,7 +27,7 @@ void verifyPoints(std::vector<double> &xyz, bool *usable_point, int &number_vert
         if(u < 2 || v < 5 || u > 360 || v > 288) {
             // std::cerr << "Error, u or v is not in the boarder" << std::endl;
             // std::cout << u << " " << v << std::endl;
-            error_counter++;
+            // error_counter++;
             continue;
         }
         if (mask.at<uchar>(int(v),int(u)) == 255) {
@@ -36,14 +37,14 @@ void verifyPoints(std::vector<double> &xyz, bool *usable_point, int &number_vert
         }
 
     }
-    number_vertices = num_points;
+    return num_points;
 }
 
 
-void remapping(std::vector<double> &xyz, std::vector<int> &faces, double *verticess, bool *usabale_faces, bool *usable_point, int &number_faces, int &num_points) {
+int remapping(std::vector<double> &xyz, std::vector<int> &faces, std::vector<int> &new_faces, double *vertices, 
+                                        bool *usabale_faces, bool *usable_point, int &number_faces, int &num_points) {
     int num_faces = 0;
     std::map<int,int> mapping;
-    std::vector<int> new_faces;
     for(int i=0;i<number_faces;i++) {
         usabale_faces[i] = false;
         int f1 = faces[i*3];
@@ -70,9 +71,10 @@ void remapping(std::vector<double> &xyz, std::vector<int> &faces, double *vertic
     // std::cout << num_points << std::endl;
     // exit(1);
     num_points = counter;
-    double vertices[num_points*3];
+    // double vertices[num_points*3];
     // double reference[num_points*3];
     // counter = 0;
+    // double *vertices = verticess;
     for(int i=0;i<number_faces;i++) {
         if(usabale_faces[i]) {
             int f1 = faces[i*3];
@@ -112,10 +114,14 @@ void remapping(std::vector<double> &xyz, std::vector<int> &faces, double *vertic
             // reference[f3_new*3] = xyz[f3*3];
             // reference[f3_new*3+1] = xyz[f3*3+1];
             // reference[f3_new*3+2] = xyz[f3*3+2];
-
+            
             
         }
     }
-    number_faces = num_faces;
-    verticess = vertices;
+    // for (int i=0; i<num_points;i++) {
+    //     std::cout << vertices[i] << std::endl;
+    // }
+
+    // verticess = vertices;
+    return num_faces;
 }

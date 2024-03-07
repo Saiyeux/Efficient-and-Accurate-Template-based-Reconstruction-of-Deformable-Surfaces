@@ -5,7 +5,7 @@
 #include <iostream>
 
 void readObj(std::vector<double> &xyz, std::vector<int> &faces, int &number_vertices, int &number_faces) {
-    std::string file_path = "../data/Hamlyn/dense reconstruction5.obj";//ReferenceMesh2.obj";
+    std::string file_path = "../data/Hamlyn/ReferenceMesh2.obj";//ReferenceMesh2.obj";
     // std::vector<double> points;
     // Dateistream-Objekt zum Lesen der Objektdatei erstellen
     std::ifstream obj_file(file_path);

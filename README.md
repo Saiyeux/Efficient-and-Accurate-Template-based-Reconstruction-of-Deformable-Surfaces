@@ -21,9 +21,11 @@
 
 ## Currently working on
 - Working on a more stable feature tracking
-- making the surface reconstruction more robust 
+-- SSIM for Outlier detection
+- making the surface reconstruction more robust
+-- Embedded deformation?! 
 - refactoring
--   - Object file Reader
+-- Object file Reader -> own class or pcl or open3d using 
 - - feature tracking -> other appraoch
 - - 3D reconstruction
 - Docker implementation
