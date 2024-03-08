@@ -7,9 +7,9 @@
 
 
 
-class MapViewer {
+class unordered_mapViewer {
     public:
-        MapViewer();
+        unordered_mapViewer();
 
         void run();
         void shutdown();
@@ -28,8 +28,8 @@ class MapViewer {
 
         // menu panel
         std::unique_ptr<pangolin::Var<bool>> menu_terminate_;  
-        static constexpr float map_viewer_width_ = 1024;
-   	    static constexpr float map_viewer_height_ = 768;                
+        static constexpr float unordered_map_viewer_width_ = 1024;
+   	    static constexpr float unordered_map_viewer_height_ = 768;                
         float viewpoint_x_=0.0, viewpoint_y_=-10.0, viewpoint_z_=-1.0, viewpoint_f_=2000.0; 
 
         pangolin::View d_cam_;

@@ -12,6 +12,9 @@
 #include <Eigen/Core>
 #include "suitesparse/cholmod.h"
 
+#include "open3d/Open3D.h"
+#include <memory>
+#include <thread>
 
 #include <random>
 
@@ -729,7 +732,38 @@ int main()
 
     // Read Object file
     readObj(xyz, faces, number_vertices, number_faces);
+
+    // auto mesh_ptr = std::make_shared<open3d::geometry::TriangleMesh>();
+
+    // std::vector<Eigen::Matrix<double,3,1>> vertices_matrix;
+    // for (int i = 0; i < number_vertices; ++i) {
+    //     Eigen::Matrix<double,3,1> a;
+    //     a << xyz[i*3], xyz[i*3+1], xyz[i*3+2];
+    //     vertices_matrix.push_back(a);
+    // }
+    // mesh_ptr->vertices_ = vertices_matrix;
+
+    //  // Hinzufügen der Faces
+     
     
+    // std::vector<Eigen::Matrix<int,3,1>> faces_matrix;
+    // for (int i = 0; i < number_faces; ++i) {
+    //     Eigen::Matrix<int,3,1> a;
+    //     a << faces[i*3], faces[i*3+1], faces[i*3+2];
+    //     faces_matrix.push_back(a);
+    // }
+    // mesh_ptr->triangles_ = faces_matrix;
+    auto mesh_ptr = open3d::io::CreateMeshFromFile("../data/Hamlyn/ReferenceMesh2.obj");
+//     open3d::visualization::DrawGeometries({mesh}, "Mesh Visualisierung", 1600, 900);
+// cv::waitKey(0);
+    auto& mesh = *mesh_ptr;
+
+    // Extrahiere die Vertices und Faces
+    auto& ver23 = mesh.vertices_;
+    auto& facess = mesh.triangles_;
+
+    xyz = ver23;
+    faces = facess;
     // for(int i=0;i<number_vertices;i++)
         
     
@@ -836,7 +870,6 @@ int main()
 
     std::vector<double> obs;
     int num_obs = 0;
-    
     for(int face_id=0;face_id < num_faces; face_id++) {
         
         int f1 = new_faces[face_id*3];
@@ -871,7 +904,7 @@ int main()
             obs.push_back(beta);
             obs.push_back(gamma);
             p0.push_back(cv::Point2f(int(u),(v)));
-            cout << (u) << " " << (v) << " " << int(f1) << " " << int(f2) << " " << int(f3) << endl;
+            // cout << (u) << " " << (v) << " " << int(f1) << " " << int(f2) << " " << int(f3) << endl;
             num_obs++;
         }
     }
@@ -909,7 +942,7 @@ int main()
 	int * Aii = (int*)malloc(nnz*sizeof(int));;
 	constructAuxCSSGN( Ap, Aii, v_mask, num_points );
 
-    m_cholSparseE = cholmod_zeros( 3*num_points, 1, CHOLMOD_REAL, &m_cS); // Achtung! Warum sieben?
+     m_cholSparseE = cholmod_zeros( 3*num_points, 1, CHOLMOD_REAL, &m_cS); // Achtung! Warum sieben?
 	double* Ex = (double*)m_cholSparseE->x;
 	int nMaxS = (nnz-num_points)*9+num_points*6;	//maximum non-zero element in S matrix 
 
@@ -936,25 +969,26 @@ int main()
     // Zufälligen double-Wert erzeugen
     double random_value = dis(gen);
 
-    
+     // Erstellen eines open3d::geometry::TriangleMesh-Objekts
+    open3d::visualization::Visualizer visualizer;
+    visualizer.CreateVisualizerWindow("Headless Visualizer", 1600, 900);
 
     while (1)
     {
         // Initialise frame matrix
         
-        cap >> cur_frame;
+        // cap >> cur_frame;
         
-        if(cur_frame.empty())
-            break;
+        // if(cur_frame.empty())
+        //     break;
 
         // feature tracking!
-        cvtColor(cur_frame, cur_frame_gray, COLOR_BGR2GRAY);
-        std::vector<cv::Point2f> p1;
-        vector<uchar> status;
-        vector<float> err;
-        TermCriteria criteria = TermCriteria((TermCriteria::COUNT) + (TermCriteria::EPS), 10, 0.03);
-        calcOpticalFlowPyrLK(pre_frame_gray, cur_frame_gray, p0, p1, status, err, Size(360/4,288/4),10, criteria); // also 21,21 window would be good
-        vector<Point2f> good_new;
+        // cvtColor(cur_frame, cur_frame_gray, COLOR_BGR2GRAY);
+        // std::vector<cv::Point2f> p1;
+        // vector<uchar> status;
+        // vector<float> err;
+        // TermCriteria criteria = TermCriteria((TermCriteria::COUNT) + (TermCriteria::EPS), 10, 0.03);
+        // vector<Point2f> good_new;
 
         // std::cout << status.size() << std::endl;
         for(int i=0; i< num_obs; i++) {
@@ -966,16 +1000,16 @@ int main()
         //     vertices[i] += 0.1;
         // }
 
-        for(uint i = 0; i < p0.size(); i++)
-        {
-            // Select good points
-            if(1) { // status[i] == 1
-                // good_new.push_back(p1[i]); 
-                // Draw the tracks
-                line(cur_frame, p1[i], p0[i], Scalar(0, 255, 0), 1);
-                circle(cur_frame, p1[i], 1, Scalar(0, 0, 255), -1);
-            }
-        }
+        // for(uint i = 0; i < p0.size(); i++)
+        // {
+        //     // Select good points
+        //     if(1) { // status[i] == 1
+        //         // good_new.push_back(p1[i]); 
+        //         // Draw the tracks
+        //         line(cur_frame, p1[i], p0[i], Scalar(0, 255, 0), 1);
+        //         circle(cur_frame, p1[i], 1, Scalar(0, 0, 255), -1);
+        //     }
+        // }
 
         static int mult = 1;
         for(int i=0; i< num_points*3; i++) {
@@ -1043,11 +1077,38 @@ int main()
             if((cost < 0.0000000001) || (dx < 0.00000000001))
                 break;
         }
+
+        std::vector<Eigen::Matrix<double,3,1>> vertices_matrix;
+        for (int i = 0; i < number_vertices; ++i) {
+            Eigen::Matrix<double,3,1> a;
+            a << xyz[i*3], xyz[i*3+1], xyz[i*3+2];
+            vertices_matrix.push_back(a);
+        }
+        mesh_ptr->vertices_ = vertices_matrix;
+
+        // Hinzufügen der Faces
         
-        imshow("Frame", cur_frame);
+        
+        std::vector<Eigen::Matrix<int,3,1>> faces_matrix;
+        for (int i = 0; i < number_faces; ++i) {
+            Eigen::Matrix<int,3,1> a;
+            a << faces[i*3], faces[i*3+1], faces[i*3+2];
+            faces_matrix.push_back(a);
+        }
+        mesh_ptr->triangles_ = faces_matrix;
+        // auto mesh = open3d::io::CreateMeshFromFile("../data/Hamlyn/ReferenceMesh2.obj");
+        visualizer.ClearGeometries();
+        visualizer.AddGeometry(mesh);
+
+    // Rendern der Szene
+        visualizer.PollEvents();
+        visualizer.UpdateRender();
+
+        
+        // imshow("Frame", cur_frame);
         // video.write(cur_frame);
         //wait 20 ms between successive frames and break the loop if key q is pressed
-        int key = waitKey(100000);
+        int key = waitKey(10000);
         if (key == 'q')
         {
             cout << "q key is pressed by the user. Stopping the video" << endl;
