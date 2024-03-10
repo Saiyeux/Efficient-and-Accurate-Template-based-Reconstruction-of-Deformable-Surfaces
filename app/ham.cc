@@ -1,5 +1,6 @@
 #include "MeshMap.h"
 #include "Tracking.h"
+#include "Mesh_Visualizer.h"
 
 #include <opencv2/opencv.hpp>
 #include <open3d/Open3D.h>
@@ -11,12 +12,14 @@
 
 void visualizer_mesh(std::shared_ptr<open3d::geometry::TriangleMesh> &mesh) {
     open3d::visualization::Visualizer visualizer;
-    
+    Eigen::Vector3d color(0.15, 0.15, 0.15); 
     auto lines = std::make_shared<open3d::geometry::LineSet>();
     for (const auto& triangle : mesh->triangles_) {
         lines->lines_.push_back({triangle(0), triangle(1)});
         lines->lines_.push_back({triangle(1), triangle(2)});
         lines->lines_.push_back({triangle(2), triangle(0)});
+
+        lines->colors_.push_back(color); lines->colors_.push_back(color); lines->colors_.push_back(color); 
     }
     lines->points_ = mesh->vertices_;
     visualizer.CreateVisualizerWindow("Mesh Visualisierung", 1600, 900);  
@@ -34,15 +37,15 @@ void visualizer_mesh(std::shared_ptr<open3d::geometry::TriangleMesh> &mesh) {
 }
 
 
+
 int main() {
     // Config
     // int thresholdValue=40;
-    int thresholdValue=30;
-    open3d::visualization::Visualizer visualizer;
-    visualizer.CreateVisualizerWindow("Mesh Visualisierung", 1600, 900);
-    open3d::visualization::ViewControl &view_control = visualizer.GetViewControl();
-    view_control.SetLookat({10.0, 0.0, 120.0}); // Setze den Startpunkt der Kamera auf (0, 0, 0)
-    view_control.SetFront({0.1, 0.0, -1.0});
+    int thresholdValue=50;
+    Mesh_Visualizer *visualize;
+    // open3d::visualization::ViewControl &view_control = visualizer.GetViewControl();
+    // view_control.SetLookat({10.0, 0.0, 120.0}); // Setze den Startpunkt der Kamera auf (0, 0, 0)
+    // view_control.SetFront({0.1, 0.0, -1.0});
     
     // Creation of a mesh
     std::string obj_file_path = "../data/Hamlyn/ReferenceMesh2.obj";
@@ -60,7 +63,17 @@ int main() {
     cv::Mat frame;
     cv::VideoCapture cap(video_file);
     cap >> frame;
+    visualize = new Mesh_Visualizer(1600, 900, vertices, triangles, K, mesh);
+    visualize->initImageParams(frame);
+    visualize->UpdateMesh(frame, mesh);
 
+    // cv::imwrite("ref_img.png", frame);
+    
+    // for(int i=0; i<mesh->triangles_.size();i++) {
+    //     std::cout << mesh->triangles_[i].x() << " " << mesh->triangles_[i].y() << " " << mesh->triangles_[i].z() << std::endl;
+    // }
+    
+    // exit(1);
     std::vector<double> inital_obs;
 
     Tracking *tracking = new Tracking(frame, K, vertices, triangles, thresholdValue);
@@ -70,25 +83,22 @@ int main() {
     map->setTracking(tracking);
     
     
-    Eigen::Matrix3d R;
-    Eigen::Vector3d t;
-                    t << 0,0,100;
-                    R << 1,0,0,
-                         0,1,0,
-                         0,-1,1;
+    
 
     std::vector<cv::Point2f> pixel;
-    Eigen::Vector3d rotation_axis(1.0, 0.0, 0.0); // y-Achse
-    double rotation_angle_rad = M_PI;
-
-    // Erstelle eine Rotationsmatrix um die gegebene Achse und Winkel
-    Eigen::AngleAxisd rotation(rotation_angle_rad, rotation_axis);
-    Eigen::Matrix3d rotation_matrix = rotation.toRotationMatrix();
+    
     while(1) {
         if(frame.empty())
             break;
+        
         tracking->track(frame, pixel);
         map->unordered_map();
+
+        mesh->vertices_ = map->getVertices();
+        mesh->triangles_ = map->getTriangles();
+        visualize->UpdateMesh(frame, mesh);
+
+        
         int key = cv::waitKey(1);
         if (key == 'q')
         {
@@ -97,42 +107,18 @@ int main() {
         }
         cap >> frame;
 
-        mesh->vertices_ = map->getVertices();
-        mesh->triangles_ = map->getTriangles();
-
-        visualizer_mesh(mesh);
-        
-        // visualizer.ClearGeometries();
-        // visualizer.AddGeometry(mesh);
-        // mesh->Rotate(rotation_matrix,t);
-        
-        // auto lines = std::make_shared<open3d::geometry::LineSet>();
-        // for (const auto& triangle : mesh->triangles_) {
-        //     lines->lines_.push_back({triangle(0), triangle(1)});
-        //     lines->lines_.push_back({triangle(1), triangle(2)});
-        //     lines->lines_.push_back({triangle(2), triangle(0)});
-        // }
-        // // lines->lines_ = mesh->triangles_;
-        // lines->points_ = mesh->vertices_;
-        // // lines->Rotate(rotation_matrix,t);
-        
-        // visualizer.AddGeometry(lines);
 
 
-        // visualizer.UpdateGeometry();
-        // visualizer.PollEvents();
-        // visualizer.UpdateRender();
-        // visualizer.Run();
+        // For later in a function!
+        
+        
+       
+
         // std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }    
    
     
-     visualizer.DestroyVisualizerWindow();
 
-    // mesh->vertices_ = map->getVertices();
-    // mesh->triangles_ = map->getTriangles();
-    
-    // visualizer(mesh);
     cap.release();
     return 0;
 }

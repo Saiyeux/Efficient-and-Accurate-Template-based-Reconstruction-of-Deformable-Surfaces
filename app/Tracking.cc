@@ -120,9 +120,10 @@ void Tracking::createMask(int thresholdValue) {
 
 void Tracking::draw_correspondence(cv::Mat &frame) {
     for(uint i = 0; i < pixel_reference_.size(); i++)
-    {
-        cv::line(frame, pixel_correspondence_[i], pixel_reference_[i], cv::Scalar(0, 255, 0), 1);
-        cv::circle(frame, pixel_correspondence_[i], 1, cv::Scalar(0, 0, 255), -1);
+    {   if (extraction->status[i] == 1) {
+            cv::line(frame, pixel_correspondence_[i], pixel_reference_[i], cv::Scalar(0, 255, 0), 1);
+            cv::circle(frame, pixel_correspondence_[i], 1, cv::Scalar(0, 0, 255), -1);
+        }
     }
 }
 void Tracking::updateObservation() {
@@ -150,7 +151,7 @@ void Tracking::track(cv::Mat &frame, std::vector<cv::Point2f> &pixel) {
     cv::Mat modifiedFrame = frame.clone();
 
     extraction->extract(frame, pixel_correspondence_);
-    // updateObservation();
+    updateObservation();
 
     this->draw_correspondence(modifiedFrame);
 

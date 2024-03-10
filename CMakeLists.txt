@@ -121,6 +121,7 @@ endif()
 add_executable(tmp app/ham.cc 
 app/Tracking.cc app/Tracking.h
 app/MeshMap.cc app/MeshMap.h
+app/Mesh_Visualizer.cc app/Mesh_Visualizer.h
 app/Extractor.cc app/Extractor.h
 app/Optimizer.cc app/Optimizer.h
 )

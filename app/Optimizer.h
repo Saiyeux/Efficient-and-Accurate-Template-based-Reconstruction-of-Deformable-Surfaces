@@ -46,7 +46,7 @@ class Optimizer {
         void storeInV_distance(double* V, int idx1, int idx2, double* J1, double* J2, sba_crsm& Uidxij);
 
 
-        int max_iteration_ = 100;
+        int max_iteration_ = 10;
 
         //Solve Sparse Matrix using CHOLMOD (http://www.cise.ufl.edu/research/sparse/SuiteSparse/) 
         cholmod_sparse *m_cholSparseS;				
@@ -147,8 +147,10 @@ void Optimizer::run() {
 
     // Zufälligen double-Wert erzeugen
     // double random_value = dis(gen);
-    // double mult = 0;
+    // std::cout << random_value << " \n";
+    // double mult = 50;
     // for(int i=0; i< num_points*3;i++) {
+    //     double random_value = dis(gen);
     //     vertices[i] += random_value*mult; 
     // }
 
@@ -234,6 +236,10 @@ void Optimizer::run() {
         e_vertices_[e_triangle.z()].y() = vertices_[triangle[2]*3+1];
         e_vertices_[e_triangle.z()].z() = vertices_[triangle[2]*3+2];
     }
+
+    // for(int i=0;i<e_vertices_.size();i++) {
+    //     if(e_vertices_[i].x() == e_reference_)
+    // }
     
     sba_crsm_free(&Sidxij);
 
@@ -262,6 +268,8 @@ void Optimizer::run() {
     // for(int i=0; i< num_points*3;i++) {
     //     vertices[i] += 1; 
     // }
+
+    
 }
 
 void Optimizer::initialize() {
@@ -282,15 +290,16 @@ void Optimizer::initialize() {
 
      for(auto& unordered_map: vertices_unordered_mapping_) {
         Eigen::Vector3d vertex = e_vertices_[unordered_map.first];
+        Eigen::Vector3d ref_vertex = e_reference_[unordered_map.first];
         // std::cout << num_vertices << std::endl;
         int id = unordered_map.second;
         vertices_[id * 3] = vertex.x();
         vertices_[id * 3 + 1] = vertex.y();
         vertices_[id * 3 + 2] = vertex.z();
 
-        reference_[id * 3] = vertex.x();
-        reference_[id * 3 + 1] = vertex.y();
-        reference_[id * 3 + 2] = vertex.z();
+        reference_[id * 3] = ref_vertex.x();
+        reference_[id * 3 + 1] = ref_vertex.y();
+        reference_[id * 3 + 2] = ref_vertex.z();
     }
     
 

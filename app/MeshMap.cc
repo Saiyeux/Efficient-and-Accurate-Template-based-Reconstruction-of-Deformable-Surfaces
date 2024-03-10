@@ -7,7 +7,7 @@
 
 MeshMap::MeshMap(std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K): K_(K), fx_(K(0,0)), fy_(K(1,1)), cx_(K(0,2)), cy_(K(1,2)),
         vertices_(vertices), triangles_(triangles), number_triangles_(triangles.size()), number_vertices_(vertices.size()) {
-            optimizer_ = new Optimizer(100, vertices_, triangles_);
+            optimizer_ = new Optimizer(10, vertices_, triangles_);
         }
 
 MeshMap::~MeshMap() {
