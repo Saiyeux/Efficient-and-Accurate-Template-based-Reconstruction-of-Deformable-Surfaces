@@ -98,7 +98,7 @@ void Mesh_Visualizer::UpdateMesh(cv::Mat &frame, std::shared_ptr<open3d::geometr
     // view_control.SetFront({0.1, 0.0, -1.0});
 
     visualizer.UpdateGeometry();
-    // visualizer.Run();
+    visualizer.Run();
     visualizer.PollEvents();
     visualizer.UpdateRender();
 

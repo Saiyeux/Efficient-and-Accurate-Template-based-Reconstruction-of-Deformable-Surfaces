@@ -118,7 +118,7 @@ endif()
 #                                 # ${PLOTUTILS_LIBRARIES}
 #                                 )
 
-add_executable(tmp app/ham.cc 
+add_executable(hamlyn_f7 app/hamlyn_f7.cc 
 app/Tracking.cc app/Tracking.h
 app/MeshMap.cc app/MeshMap.h
 app/Mesh_Visualizer.cc app/Mesh_Visualizer.h
@@ -126,7 +126,7 @@ app/Extractor.cc app/Extractor.h
 app/Optimizer.cc app/Optimizer.h
 )
 
-target_link_libraries(tmp PRIVATE 
+target_link_libraries(hamlyn_f7 PRIVATE 
                                 ${OpenCV_LIBS}
                                 opencv_imgcodecs
                                 opencv_videoio

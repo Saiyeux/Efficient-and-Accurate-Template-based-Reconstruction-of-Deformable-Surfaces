@@ -84,6 +84,8 @@ int main() {
     
     std::vector<cv::Point2f> pixel; // mittlerweile unneccesary?
     
+
+    
     // auto pc = open3d::io::CreatePointCloudFromFile("../data/Hamlyn/f7/heartDepthMap_0.txt", "xyz");
 
     //  // Index der Punkte finden, die nicht NaN sind
@@ -126,7 +128,7 @@ int main() {
         visualize->UpdateMesh(frame, mesh);
 
         
-        int key = cv::waitKey(1);
+        int key = cv::waitKey(11);
         if (key == 'q')
         {
             std::cout << "q key is pressed by the user. Stopping the video" << std::endl;
