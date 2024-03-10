@@ -15,8 +15,8 @@
 ### Dependencies
 <ul>
     <li>OpenCV-4.5.5</li>
-    <li>Eigen 3.7</li>
-    
+    <li>Eigen-3.7</li>
+    <li>Open3D-0.18</li>
 </ul>
 
 ## Currently working on
@@ -25,12 +25,10 @@
 - making the surface reconstruction more robust
 -- Embedded deformation?! 
 - refactoring
--- Object file Reader -> own class or pcl or open3d using 
-- - feature tracking -> other appraoch
-- - 3D reconstruction
 - Docker implementation
 - Writing the Readme
 - preprocessing of the reference image, for better trackable feature points
+- Mesh_Visualizer -> Bad programmed and I dont know why it works. Make it proper!
 
 ## License
 

@@ -2,6 +2,7 @@
 #include "Extractor.h"
 #include "MeshMap.h"
 #include <iostream>
+#include <algorithm>
 
 
 Tracking::Tracking(cv::Mat &frame, Eigen::Matrix3d K, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, int thresholdValue) :  K_(K), fx_(K(0,0)), fy_(K(1,1)), cx_(K(0,2)), cy_(K(1,2)), pre_frame_(frame),
@@ -30,6 +31,10 @@ std::vector<double> Tracking::getObservation() {
 
 void Tracking::createInitialObseration() {
     
+    bool used_vertex[vertices_.size()];
+    for (size_t i = 0; i < vertices_.size(); ++i) {
+        used_vertex[i] = false; // oder 0, falls das Array Werte vom Typ char enthält
+    }
     for(int face_id=0;face_id < triangles_.size(); face_id++) {
         
         if(!usable_triangles_[face_id])
@@ -46,6 +51,27 @@ void Tracking::createInitialObseration() {
             double beta = bet[id];
             double gamma = gam[id];
             
+            if(int(alpha) == 1) {
+                if(used_vertex[f1]) {
+                    continue;
+                } else {
+                    used_vertex[f1] = true;
+                }
+            }
+            if(int(beta) == 1) {
+                if(used_vertex[f2]) {
+                    continue;
+                } else {
+                    used_vertex[f2] = true;
+                }
+            }
+            if(int(gamma) == 1) {
+                if(used_vertex[f3]) {
+                    continue;
+                } else {
+                    used_vertex[f3] = true;
+                }
+            }
             if ((alpha +beta+gamma >1) || (alpha +beta+gamma < 0)){
                 std::cerr << "alpha, beta and gamma wrong!" << std::endl;
                 exit(-1);
@@ -129,14 +155,14 @@ void Tracking::draw_correspondence(cv::Mat &frame) {
 void Tracking::updateObservation() {
 
     for(int obs_id=0; obs_id < obs.size()/6; obs_id++) {
-        int face_id = obs[obs_id*6];
-        double alpha = obs[obs_id*6+3];
-        double beta = obs[obs_id*6+4];
-        double gamm = obs[obs_id*6+5];
+        // int face_id = obs[obs_id*6];
+        // double alpha = obs[obs_id*6+3];
+        // double beta = obs[obs_id*6+4];
+        // double gamm = obs[obs_id*6+5];
 
-        int f1 = triangles_[face_id].x();
-        int f2 = triangles_[face_id].y();
-        int f3 = triangles_[face_id].z();
+        // int f1 = triangles_[face_id].x();
+        // int f2 = triangles_[face_id].y();
+        // int f3 = triangles_[face_id].z();
 
         double u = pixel_correspondence_[obs_id].x;
         double v = pixel_correspondence_[obs_id].y;

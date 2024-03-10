@@ -41,7 +41,7 @@ void visualizer_mesh(std::shared_ptr<open3d::geometry::TriangleMesh> &mesh) {
 int main() {
     // Config
     // int thresholdValue=40;
-    int thresholdValue=50;
+    int thresholdValue=0;
     Mesh_Visualizer *visualize;
     // open3d::visualization::ViewControl &view_control = visualizer.GetViewControl();
     // view_control.SetLookat({10.0, 0.0, 120.0}); // Setze den Startpunkt der Kamera auf (0, 0, 0)
@@ -82,11 +82,38 @@ int main() {
     tracking->setunordered_mapping(map); // obs_set in here!
     map->setTracking(tracking);
     
+    std::vector<cv::Point2f> pixel; // mittlerweile unneccesary?
     
-    
+    // auto pc = open3d::io::CreatePointCloudFromFile("../data/Hamlyn/f7/heartDepthMap_0.txt", "xyz");
 
-    std::vector<cv::Point2f> pixel;
+    //  // Index der Punkte finden, die nicht NaN sind
+    // std::vector<size_t> valid_indices;
+    // for (int i = 0; i < pc->points_.size(); ++i) {
+    //     if (!std::isnan(pc->points_[i].x()) && !::isnan(pc->points_[i].y()) && !::isnan(pc->points_[i].z())) {
+    //         valid_indices.push_back(i);
+    //     }
+    // }
+
+    // // Punktwolke filtern
+    // auto filtered_pc = pc->SelectByIndex(valid_indices);
+
+    // // Visualisierung
+    // open3d::visualization::DrawGeometries({pc});
+
+    // // KD-Baum für das Mesh erstellen
+    // open3d::geometry::KDTreeFlann kdtree;
+    // kdtree.SetGeometry(*mesh);
+    // open3d::geometry::
+    // // Für jeden Punkt in der Punktwolke den nächsten Nachbarn im Mesh finden
+    // std::vector<int> nearest_triangle_indices(pc->points_.size());
+    // std::vector<double> nearest_triangle_distances(pc->points_.size());
+    // for (int i = 0; i < pc->points_.size(); ++i) {
+    //     Eigen::Vector3d query_point(pc->points_[i].x(), pc->points_[i].y(), pc->points_[i].z());
+    //     kdtree.SearchKNN(query_point, 1, nearest_triangle_indices[i], nearest_triangle_distances[i]);
+    // }
+
     
+    // exit(1);
     while(1) {
         if(frame.empty())
             break;

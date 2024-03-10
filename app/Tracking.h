@@ -13,9 +13,9 @@ class Tracking {
         void setunordered_mapping(MeshMap *unordered_map);
         void getObs(std::vector<double> &obs);
 
-        double alp[4] = {0.3333,0.1,0.1,0.8};
-        double bet[4] = {0.3333,0.1,0.8,0.1};
-        double gam[4] = {0.3333,0.8,0.1,0.1};
+        double alp[4] = {0.3333,1,0,0};
+        double bet[4] = {0.3333,0,1,0};
+        double gam[4] = {0.3334,0,0,1};
 
     private:
         void updateObservation();
