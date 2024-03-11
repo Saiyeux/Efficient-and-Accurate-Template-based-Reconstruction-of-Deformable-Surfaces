@@ -93,7 +93,7 @@ void compareWithGroundTruth(open3d::geometry::TriangleMesh mesh, cv::Mat &output
 int main() {
     // Config
     // int thresholdValue=40;
-    int thresholdValue=50;
+    int thresholdValue=70;
     Mesh_Visualizer *visualize;
     // open3d::visualization::ViewControl &view_control = visualizer.GetViewControl();
     // view_control.SetLookat({10.0, 0.0, 120.0}); // Setze den Startpunkt der Kamera auf (0, 0, 0)
@@ -205,7 +205,7 @@ int main() {
         frame.convertTo(frame, -1, 1, 50);
         visualize->UpdateMesh(frame, mesh);
 
-        int key = cv::waitKey(0);
+        int key = cv::waitKey(1);
         if (key == 'q')
         {
             std::cout << "q key is pressed by the user. Stopping the video" << std::endl;
