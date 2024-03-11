@@ -145,18 +145,18 @@ void OptimizerDistanceOnly::run() {
 
 
     // Zufallsgenerator initialisieren
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> dis(0.0, 1.0); // Verteilung zwischen 0.0 und 1.0
+    // std::random_device rd;
+    // std::mt19937 gen(rd());
+    // std::uniform_real_distribution<double> dis(0.0, 1.0); // Verteilung zwischen 0.0 und 1.0
 
     // Zufälligen double-Wert erzeugen
     // double random_value = dis(gen);
     // std::cout << random_value << " \n";
-    double mult = 10;
-    for(int i=0; i< num_points;i++) {
-        double random_value = dis(gen);
-        vertices[i*3+2] += random_value*mult; 
-    }
+    // double mult = 10;
+    // for(int i=0; i< num_points;i++) {
+    //     double random_value = dis(gen);
+    //     vertices[i*3+2] += random_value*mult; 
+    // }
 
     for(int iter = 1; iter < max_iteration_;iter++) {
         memset( error_, 0, (( (num_faces*3))*sizeof(double) ));
@@ -169,6 +169,16 @@ void OptimizerDistanceOnly::run() {
         // compute_reprojection_jacobian(V_, g_, error_, obs, vertices, new_faces, K, num_obs, Sidxij);
         compute_distance_jacobian(V_,g_,error_, vertices, new_faces, num_faces, num_obs, Sidxij);
     
+        // double lambda = 10;
+        // for(int i=0;i<num_points; i++)
+        // {
+        //     int pos;
+        //     double* ppUpa;
+        //     double sum=0;	
+        //     pos = sba_crsm_elmidx( &Sidxij, i, i);
+
+        //     pos += 1 * lambda;
+        // }
         constructCSSGN( Si, Sp, Sx, V_, Sidxij, init, v_mask_, num_points); //set CSS format using S matrix
             for(int ii=0; ii< num_points; ii++) {
                 Ex[ii] = g_[ii];
@@ -321,21 +331,21 @@ void OptimizerDistanceOnly::initialize() {
         double gamma = observation_[i*6+5];
         // std::cout << "begin\n";
        
-        double *vertex;
+        double *vertex, *vertex1;
         if(int(alpha) == 1) {
             vertex = e_vertices_[e_triangles_[face_id].x()].data();
-            // vertex = e_reference_[e_triangles_[face_id].x()].data();
+            vertex1 = e_reference_[e_triangles_[face_id].x()].data();
             // tmp = e_triangles_[face_id].x();
         } else if (int(beta) == 1)
         {
             vertex = e_vertices_[e_triangles_[face_id].y()].data();
-            // vertex = e_reference_[e_triangles_[face_id].y()].data();
+            vertex1 = e_reference_[e_triangles_[face_id].y()].data();
             // tmp = e_triangles_[face_id].y();
 
         } else if (int(gamma) == 1)
         {
             vertex = e_vertices_[e_triangles_[face_id].z()].data();
-            // vertex = e_reference_[e_triangles_[face_id].z()].data();
+            vertex1 = e_reference_[e_triangles_[face_id].z()].data();
             // tmp = e_triangles_[face_id].z();
     
         } else {
@@ -345,10 +355,14 @@ void OptimizerDistanceOnly::initialize() {
         }
         // std::cout << alpha << " "<< beta << " "<< gamma << " " << std::endl;
         // std::cout << vertex[0] << " "<< vertex[1] << " "<< vertex[2] << " " << std::endl;
-        
-        double phi = std::atan2(vertex[0], vertex[2]);
-        double theta = std::atan2(vertex[1], std::sqrt(vertex[0] * vertex[0] + vertex[2]*vertex[2]));
-        double d = std::sqrt(vertex[0]*vertex[0] + vertex[1]*vertex[1] + vertex[2]*vertex[2]);
+        Eigen::Vector3d uvt;
+        uvt << observation_[i*6+1], observation_[i*6+2], 1;
+
+        uvt = invK_ * uvt; 
+
+        double phi = std::atan2(uvt[0], uvt[2]);
+        double theta = std::atan2(uvt[1], std::sqrt(uvt[0] * uvt[0] + uvt[2]*uvt[2]));
+        double d = std::sqrt(vertex1[0]*vertex1[0] + vertex1[1]*vertex1[1] + vertex1[2]*vertex1[2]);
         // std::cout << phi << " "<< theta << " "<< d << " " << std::endl;
         
         vertex[0] = phi;
