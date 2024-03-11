@@ -12,14 +12,17 @@ class Mesh_Visualizer {
         
     private:
         void updateFrame(cv::Mat &frame);
+        void updateErrorMap(cv::Mat &frame); 
         open3d::visualization::ViewControl view_control;
         std::shared_ptr<open3d::geometry::TriangleMesh> mesh_ = nullptr;
         open3d::visualization::Visualizer visualizer;
-        open3d::geometry::Image texture_image;
+        open3d::geometry::Image texture_image, texture_error_map;
 
         std::vector<Eigen::Vector3d> vertices_;
         std::vector<Eigen::Vector3i> triangles_;
         std::vector<Eigen::Vector2d> uv_coordinates_;
+
+        Eigen::Matrix3d K_;
 
         int width_ = 0;
         int height_ = 0;

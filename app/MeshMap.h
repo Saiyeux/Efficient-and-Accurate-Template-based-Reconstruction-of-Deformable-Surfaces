@@ -6,6 +6,7 @@
 
 class Tracking;
 class Optimizer;
+class OptimizerDistanceOnly;
 
 class MeshMap {
     public:
@@ -22,6 +23,7 @@ class MeshMap {
     private:
         Tracking *tracking_ = nullptr;
         Optimizer *optimizer_ = nullptr;
+        OptimizerDistanceOnly *optimizerDistance_ = nullptr;
 
         std::vector<double> obs_;
         std::vector<Eigen::Vector3d> vertices_;

@@ -124,6 +124,7 @@ app/MeshMap.cc app/MeshMap.h
 app/Mesh_Visualizer.cc app/Mesh_Visualizer.h
 app/Extractor.cc app/Extractor.h
 app/Optimizer.cc app/Optimizer.h
+app/OptimizerDistanceOnly.cc app/OptimizerDistanceOnly.h
 )
 
 target_link_libraries(hamlyn_f7 PRIVATE 

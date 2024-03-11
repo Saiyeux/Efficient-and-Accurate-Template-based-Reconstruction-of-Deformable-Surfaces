@@ -177,7 +177,7 @@ void Tracking::track(cv::Mat &frame, std::vector<cv::Point2f> &pixel) {
     cv::Mat modifiedFrame = frame.clone();
 
     extraction->extract(frame, pixel_correspondence_);
-    updateObservation();
+    // updateObservation();
 
     this->draw_correspondence(modifiedFrame);
 

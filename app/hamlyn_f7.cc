@@ -4,11 +4,13 @@
 
 #include <opencv2/opencv.hpp>
 #include <open3d/Open3D.h>
+#include <open3d/t/geometry/RaycastingScene.h>
 #include <Eigen/Core>
 #include <iostream>
 #include <string>
 #include <vector>
 #include <thread>
+#include <memory>
 
 void visualizer_mesh(std::shared_ptr<open3d::geometry::TriangleMesh> &mesh) {
     open3d::visualization::Visualizer visualizer;
@@ -36,12 +38,62 @@ void visualizer_mesh(std::shared_ptr<open3d::geometry::TriangleMesh> &mesh) {
 
 }
 
+void compareWithGroundTruth(open3d::geometry::TriangleMesh mesh, cv::Mat &output, int FrameNo) {
+    // static int FrameNo = 0;
+    double a = FrameNo; 
+    a /= 25.0;
+    a += 0.093333;
+    a *= 30;
+    // a -= 1;
+    double no = std::round(int(a) % 20);
+    std::cout << FrameNo << " " << no << " " << std::fmod(a, 20) <<std::endl;
+    std::string no_str = std::to_string(int(no));
+    auto pc = open3d::io::CreatePointCloudFromFile("../data/Hamlyn/f7/heartDepthMap_" + no_str + ".txt", "xyz");
+
+    static open3d::t::geometry::TriangleMesh t_mesh = open3d::t::geometry::TriangleMesh::FromLegacy(mesh);
+    open3d::t::geometry::PointCloud t_pc = open3d::t::geometry::PointCloud::FromLegacy(*pc);
+    // t_mesh.Clear();
+
+    auto scene = open3d::t::geometry::RaycastingScene() ;
+    scene.AddTriangles(t_mesh);
+    open3d::core::Tensor distances = scene.ComputeDistance(t_pc.GetPointPositions(),0);
+    std::vector<float> values = distances.ToFlatVector<float>();
+    
+    cv::Mat mat(288, 360, CV_32F, values.data());
+    cv::Mat scaled_mat;
+    cv::normalize(mat, scaled_mat, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+    cv::Mat heatmap;
+    cv::applyColorMap(scaled_mat, heatmap, cv::COLORMAP_JET);
+
+    // cv::Mat in[] = {cv::Mat::zeros(scaled_mat.rows, scaled_mat.cols, CV_8UC1), cv::Mat::zeros(scaled_mat.rows, scaled_mat.cols, CV_8UC1), scaled_mat};
+    cv::Mat in[] = {scaled_mat, scaled_mat, scaled_mat};
+    int from_to[] = {0,0, 1,1, 2,2};
+    cv::mixChannels(in, 3, &heatmap, 1, from_to, 3);
+    
+    double mean=0;
+    std::vector<Eigen::Vector3d> pce = pc->points_;
+    int counter = 0;
+    for(int i=0;i<values.size();i++) {
+        float val = values[i];
+        if((pce[i].x() == 0) && (pce[i].y() == 0) && (pce[i].z() == 0))
+            continue;
+        counter++;
+        mean += val;
+        // std::cout << val << std::endl;
+    }
+    std::cout << mean/counter << " " << counter << std::endl;
+    cv::imshow("Heatmap", heatmap);
+    output = heatmap;
+    
+    // Zusammenführen der Kanäle zu einem 3-Kanal-Bild
+    // cv::merge(in, 3, output);
+}
 
 
 int main() {
     // Config
     // int thresholdValue=40;
-    int thresholdValue=0;
+    int thresholdValue=50;
     Mesh_Visualizer *visualize;
     // open3d::visualization::ViewControl &view_control = visualizer.GetViewControl();
     // view_control.SetLookat({10.0, 0.0, 120.0}); // Setze den Startpunkt der Kamera auf (0, 0, 0)
@@ -65,7 +117,7 @@ int main() {
     cap >> frame;
     visualize = new Mesh_Visualizer(1600, 900, vertices, triangles, K, mesh);
     visualize->initImageParams(frame);
-    visualize->UpdateMesh(frame, mesh);
+    // visualize->UpdateMesh(frame, mesh);
 
     // cv::imwrite("ref_img.png", frame);
     
@@ -86,8 +138,24 @@ int main() {
     
 
     
-    // auto pc = open3d::io::CreatePointCloudFromFile("../data/Hamlyn/f7/heartDepthMap_0.txt", "xyz");
 
+    auto scene = open3d::t::geometry::RaycastingScene() ;
+    // auto nmesh = open3d::t::geometry::TriangleMesh::FromLegacy(mesh);
+    // open3d::t::geometry::TriangleMesh nmesh;
+    // open3d::geometry::TriangleMesh tmp, tmp2; 
+    // tmp = *mesh;
+    // tmp2 = tmp;
+    // nmesh = open3d::t::geometry::TriangleMesh::FromLegacy(tmp2);
+    // scene.AddTriangles(nmesh);
+
+    // std::shared_ptr<open3d::geometry::TriangleMesh> mesh_legacy = std::make_shared<open3d::geometry::TriangleMesh>();
+
+    // Erstellen einer Tensor-kompatiblen 'open3d::t::geometry::TriangleMesh' aus dem Legacy-Mesh
+    
+    // std::cout << mean_tensor << std::endl;
+    // cv::waitKey(10000);
+    // std::cout << "asdasd"<< std::endl;
+    // exit(1);
     //  // Index der Punkte finden, die nicht NaN sind
     // std::vector<size_t> valid_indices;
     // for (int i = 0; i < pc->points_.size(); ++i) {
@@ -116,6 +184,7 @@ int main() {
 
     
     // exit(1);
+    int FrameNo = 0;
     while(1) {
         if(frame.empty())
             break;
@@ -125,10 +194,18 @@ int main() {
 
         mesh->vertices_ = map->getVertices();
         mesh->triangles_ = map->getTriangles();
+        
+    //     cv::Mat error_map;
+    //     compareWithGroundTruth(*mesh, error_map, FrameNo);
+    //     FrameNo++;
+    //     cv::imshow("sad", frame);
+    // cv::waitKey(0);
+    
+        // visualize->UpdateMesh(error_map, mesh);
+        frame.convertTo(frame, -1, 1, 50);
         visualize->UpdateMesh(frame, mesh);
 
-        
-        int key = cv::waitKey(11);
+        int key = cv::waitKey(0);
         if (key == 'q')
         {
             std::cout << "q key is pressed by the user. Stopping the video" << std::endl;
@@ -136,7 +213,7 @@ int main() {
         }
         cap >> frame;
 
-
+        
 
         // For later in a function!
         
@@ -151,3 +228,4 @@ int main() {
     cap.release();
     return 0;
 }
+

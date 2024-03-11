@@ -1,13 +1,15 @@
 #include "MeshMap.h"
 #include "Tracking.h"
-#include "Optimizer.h"
+// #include "Optimizer.h"
+#include "OptimizerDistanceOnly.h"
 
 
 
 
 MeshMap::MeshMap(std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K): K_(K), fx_(K(0,0)), fy_(K(1,1)), cx_(K(0,2)), cy_(K(1,2)),
         vertices_(vertices), triangles_(triangles), number_triangles_(triangles.size()), number_vertices_(vertices.size()) {
-            optimizer_ = new Optimizer(10, vertices_, triangles_);
+            // optimizer_ = new Optimizer(100, vertices_, triangles_);
+            optimizerDistance_ = new OptimizerDistanceOnly(100, vertices, triangles_, K);
         }
 
 MeshMap::~MeshMap() {
@@ -130,8 +132,13 @@ void MeshMap::unordered_map() {
 //     }
     // exit(1);
 
-    optimizer_->setParamater(&obs_[0], vertices_unordered_mapping_, triangle_unordered_mapping_, vertices_unordered_mapping_.size(), triangle_unordered_mapping_.size(), obs_.size() / 6);
-    optimizer_->initialize();
-    optimizer_->run();
-    optimizer_->getVertices(vertices_);
+    // optimizer_->setParamater(&obs_[0], vertices_unordered_mapping_, triangle_unordered_mapping_, vertices_unordered_mapping_.size(), triangle_unordered_mapping_.size(), obs_.size() / 6);
+    // optimizer_->initialize();
+    // optimizer_->run();
+    // optimizer_->getVertices(vertices_);
+
+    optimizerDistance_->setParamater(&obs_[0], vertices_unordered_mapping_, triangle_unordered_mapping_, vertices_unordered_mapping_.size(), triangle_unordered_mapping_.size(), obs_.size() / 6);
+    optimizerDistance_->initialize();
+    optimizerDistance_->run();
+    optimizerDistance_->getVertices(vertices_);
 }
