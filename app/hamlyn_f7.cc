@@ -5,12 +5,21 @@
 #include <opencv2/opencv.hpp>
 #include <open3d/Open3D.h>
 #include <open3d/t/geometry/RaycastingScene.h>
-#include <Eigen/Core>
 #include <iostream>
 #include <string>
 #include <vector>
 #include <thread>
 #include <memory>
+#include <yaml-cpp/yaml.h>
+
+// tmp
+#include<fstream>
+// //! YAML node
+//     const YAML::Node yaml_node_;
+
+// inline YAML::Node yaml_optional_ref(const YAML::Node& ref_node, const std::string& key) {
+//     return ref_node[key] ? ref_node[key] : YAML::Node();
+// }
 
 void visualizer_mesh(std::shared_ptr<open3d::geometry::TriangleMesh> &mesh) {
     open3d::visualization::Visualizer visualizer;
@@ -93,43 +102,40 @@ void compareWithGroundTruth(open3d::geometry::TriangleMesh mesh, cv::Mat &output
 int main() {
     // Config
     // int thresholdValue=40;
-    int thresholdValue=70;
-    Mesh_Visualizer *visualize;
+    // yaml_optional_ref(const YAML::Node& ref_node, const std::string& key)
+    const YAML::Node config = YAML::LoadFile("../app/config.yaml");
+    int max_iteration = config["Optimizer"]["max_iteration"].as<int>();
+    int thresholdValue = config["Preprocessing"]["brightness_threshold"].as<int>();
+    int optimization_algorithm = config["System"]["optimization_algorithm"].as<int>();
+    
     // open3d::visualization::ViewControl &view_control = visualizer.GetViewControl();
     // view_control.SetLookat({10.0, 0.0, 120.0}); // Setze den Startpunkt der Kamera auf (0, 0, 0)
     // view_control.SetFront({0.1, 0.0, -1.0});
     
     // Creation of a mesh
-    std::string obj_file_path = "../data/Hamlyn/ReferenceMesh2.obj";
-    // std::string obj_file_path = "../data/Hamlyn/dense reconstruction5.obj";
-    std::string video_file = "../data/Hamlyn/output.mp4";
+    std::string video_file = config["System"]["video_file_path"].as<std::string>();
+   std::string obj_file_path = config["System"]["reference_file_path"].as<std::string>();
+
+    Mesh_Visualizer *visualize;
+    Eigen::Matrix3d K;
+    cv::Mat frame;
+    cv::VideoCapture cap(video_file);
+    cap >> frame;
+    K <<    config["Image"]["fx"].as<double>(), 0.000000, config["Image"]["cx"].as<double>(),
+            0.000000, config["Image"]["fy"].as<double>(), config["Image"]["cy"].as<double>(),
+            0.000000, 0.000000, 1.000000;
 
     std::shared_ptr<open3d::geometry::TriangleMesh> mesh = open3d::io::CreateMeshFromFile(obj_file_path);
     std::vector<Eigen::Vector3d> vertices = mesh->vertices_;
     std::vector<Eigen::Vector3i> triangles = mesh->triangles_;
-    Eigen::Matrix3d K;
-    K <<    391.656525, 0.000000, 165.964371,
-            0.000000, 426.835144, 154.498138,
-            0.000000, 0.000000, 1.000000;
-
-    cv::Mat frame;
-    cv::VideoCapture cap(video_file);
-    cap >> frame;
-    visualize = new Mesh_Visualizer(1600, 900, vertices, triangles, K, mesh);
+    
+    visualize = new Mesh_Visualizer(config["Visualization"]["width"].as<int>(), config["Visualization"]["height"].as<int>(), vertices, triangles, K, mesh);
     visualize->initImageParams(frame);
-    // visualize->UpdateMesh(frame, mesh);
 
-    // cv::imwrite("ref_img.png", frame);
-    
-    // for(int i=0; i<mesh->triangles_.size();i++) {
-    //     std::cout << mesh->triangles_[i].x() << " " << mesh->triangles_[i].y() << " " << mesh->triangles_[i].z() << std::endl;
-    // }
-    
-    // exit(1);
+  
     std::vector<double> inital_obs;
-
     Tracking *tracking = new Tracking(frame, K, vertices, triangles, thresholdValue);
-    MeshMap *map = new MeshMap(vertices, triangles, K);
+    MeshMap *map = new MeshMap(vertices, triangles, K, max_iteration, optimization_algorithm);
     
     tracking->setunordered_mapping(map); // obs_set in here!
     map->setTracking(tracking);
@@ -139,52 +145,12 @@ int main() {
 
     
 
-    auto scene = open3d::t::geometry::RaycastingScene() ;
-    // auto nmesh = open3d::t::geometry::TriangleMesh::FromLegacy(mesh);
-    // open3d::t::geometry::TriangleMesh nmesh;
-    // open3d::geometry::TriangleMesh tmp, tmp2; 
-    // tmp = *mesh;
-    // tmp2 = tmp;
-    // nmesh = open3d::t::geometry::TriangleMesh::FromLegacy(tmp2);
-    // scene.AddTriangles(nmesh);
-
-    // std::shared_ptr<open3d::geometry::TriangleMesh> mesh_legacy = std::make_shared<open3d::geometry::TriangleMesh>();
-
-    // Erstellen einer Tensor-kompatiblen 'open3d::t::geometry::TriangleMesh' aus dem Legacy-Mesh
-    
-    // std::cout << mean_tensor << std::endl;
-    // cv::waitKey(10000);
-    // std::cout << "asdasd"<< std::endl;
-    // exit(1);
-    //  // Index der Punkte finden, die nicht NaN sind
-    // std::vector<size_t> valid_indices;
-    // for (int i = 0; i < pc->points_.size(); ++i) {
-    //     if (!std::isnan(pc->points_[i].x()) && !::isnan(pc->points_[i].y()) && !::isnan(pc->points_[i].z())) {
-    //         valid_indices.push_back(i);
-    //     }
-    // }
-
-    // // Punktwolke filtern
-    // auto filtered_pc = pc->SelectByIndex(valid_indices);
-
-    // // Visualisierung
-    // open3d::visualization::DrawGeometries({pc});
-
-    // // KD-Baum für das Mesh erstellen
-    // open3d::geometry::KDTreeFlann kdtree;
-    // kdtree.SetGeometry(*mesh);
-    // open3d::geometry::
-    // // Für jeden Punkt in der Punktwolke den nächsten Nachbarn im Mesh finden
-    // std::vector<int> nearest_triangle_indices(pc->points_.size());
-    // std::vector<double> nearest_triangle_distances(pc->points_.size());
-    // for (int i = 0; i < pc->points_.size(); ++i) {
-    //     Eigen::Vector3d query_point(pc->points_[i].x(), pc->points_[i].y(), pc->points_[i].z());
-    //     kdtree.SearchKNN(query_point, 1, nearest_triangle_indices[i], nearest_triangle_distances[i]);
-    // }
-
+    // auto scene = open3d::t::geometry::RaycastingScene() ;
+   
     
     // exit(1);
     int FrameNo = 0;
+    
     while(1) {
         if(frame.empty())
             break;
@@ -214,13 +180,18 @@ int main() {
         cap >> frame;
 
         
-
         // For later in a function!
-        
-        
-       
-
-        // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        // std::ofstream file("Normal/High/distanceOnly_" + std::to_string(FrameNo) + ".txt");
+        // FrameNo++;
+        // for(int i=0; i < mesh->vertices_.size(); i++) {
+        //     file << mesh->vertices_[i].x() << " " << mesh->vertices_[i].y() << " " <<
+        //     mesh->vertices_[i].z() << std::endl;
+        // }
+        // file.close();
+        // // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        // if(FrameNo == 50)
+        //     break;
+        // cv::waitKey(0);
     }    
    
     

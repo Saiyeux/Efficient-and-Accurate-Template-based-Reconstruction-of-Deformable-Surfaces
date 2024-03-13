@@ -17,9 +17,9 @@ struct sba_crsm
     int *rowptr;  
 };
 
-class OptimizerDistanceOnly {
+class Optimizer {
     public:
-        OptimizerDistanceOnly(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K);
+        Optimizer(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles);
 
         void setParamater(double *observation, std::unordered_map<int,int> &unordered_mapping_vertices, std::unordered_map<int,int> &unordered_mapping_triangles, int number_vertices, int number_triangles, int number_observation);
         void initialize();
@@ -39,11 +39,11 @@ class OptimizerDistanceOnly {
         void storeInV(double* V, int idx1, int idx2, double* J1, double* J2, sba_crsm& Uidxij);
         void storeInV(double* V, int idx, double* J, sba_crsm& Uidxij);
         void storeInG(double *g, double *J, double *e);
-        void storeInG_distance(double *g, double J, double *e);
+        void storeInG_distance(double *g, double *J, double *e);
         void compute_distance_error(double *error, double *xyz, double *ref,int *faces, int number_faces, int offset);
         void compute_distance_jacobian(double *V, double *g, double *error, double *xyz, int *faces, int num_faces, int offset, sba_crsm& Uidxij);
-        void storeInV_distance(double* V, int idx, double J, sba_crsm& Uidxij);
-        void storeInV_distance(double* V, int idx1, int idx2, double J1, double J2, sba_crsm& Uidxij);
+        void storeInV_distance(double* V, int idx, double* J, sba_crsm& Uidxij);
+        void storeInV_distance(double* V, int idx1, int idx2, double* J1, double* J2, sba_crsm& Uidxij);
 
 
         int max_iteration_ = 10;
@@ -58,8 +58,6 @@ class OptimizerDistanceOnly {
         std::vector<Eigen::Vector3d> e_vertices_;
         std::vector<Eigen::Vector3d> e_reference_;
         std::vector<Eigen::Vector3i> e_triangles_;
-
-        Eigen::Matrix3d K_, invK_;
 
         double *vertices_;
         double *reference_;
@@ -93,30 +91,18 @@ class OptimizerDistanceOnly {
 
 };
 
-OptimizerDistanceOnly::OptimizerDistanceOnly(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K) : K_(K), max_iteration_(max_iteration), e_vertices_(vertices), e_triangles_(triangles) {
+Optimizer::Optimizer(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles) : max_iteration_(max_iteration), e_vertices_(vertices), e_triangles_(triangles) {
     // create reference
     for(int i=0; i< e_vertices_.size(); i++)
         e_reference_.push_back(e_vertices_[i]);
-
-    invK_= K.inverse();
 }
 
-void OptimizerDistanceOnly::getVertices(std::vector<Eigen::Vector3d> &vertices) {
+void Optimizer::getVertices(std::vector<Eigen::Vector3d> &vertices) {
     vertices = e_vertices_;
 }
 
-static void visualizer(std::shared_ptr<open3d::geometry::TriangleMesh> &mesh) {
-    open3d::visualization::Visualizer visualizer;
-    visualizer.CreateVisualizerWindow("Mesh Visualisierung", 1600, 900);
-    visualizer.AddGeometry(mesh);
-    open3d::visualization::ViewControl &view_control = visualizer.GetViewControl();
-    view_control.SetLookat({0.0, 0.0, 0.0}); // Setze den Startpunkt der Kamera auf (0, 0, 0)
-    view_control.SetFront({0.0, 0.0, -1.0});
-    visualizer.Run();
 
-}
-
-void OptimizerDistanceOnly::run() {
+void Optimizer::run() {
 
     Eigen::Matrix3d K;
     K <<    391.656525, 0.000000, 165.964371,
@@ -145,46 +131,36 @@ void OptimizerDistanceOnly::run() {
 
 
     // Zufallsgenerator initialisieren
-    // std::random_device rd;
-    // std::mt19937 gen(rd());
-    // std::uniform_real_distribution<double> dis(0.0, 1.0); // Verteilung zwischen 0.0 und 1.0
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<double> dis(0.0, 1.0); // Verteilung zwischen 0.0 und 1.0
 
     // Zufälligen double-Wert erzeugen
     // double random_value = dis(gen);
     // std::cout << random_value << " \n";
-    // double mult = 10;
-    // for(int i=0; i< num_points;i++) {
+    // double mult = 50;
+    // for(int i=0; i< num_points*3;i++) {
     //     double random_value = dis(gen);
-    //     vertices[i*3+2] += random_value*mult; 
+    //     vertices[i] += random_value*mult; 
     // }
 
     for(int iter = 1; iter < max_iteration_;iter++) {
-        memset( error_, 0, (( (num_faces*3))*sizeof(double) ));
-        memset( V_, 0, nnz  * sizeof(double));
-        memset( g_, 0, num_points * sizeof(double));
+        memset( error_, 0, (((num_obs*2) + (num_faces*3))*sizeof(double) ));
+        memset( V_, 0, nnz * 3 * 3 * sizeof(double));
+        memset( g_, 0, num_points * 3 * sizeof(double));
 
-        // compute_reprojection_error(error_, obs, vertices, new_faces, K, num_obs);
+        compute_reprojection_error(error_, obs, vertices, new_faces, K, num_obs);
         compute_distance_error(error_, vertices, reference, new_faces, num_faces, num_obs);
 
-        // compute_reprojection_jacobian(V_, g_, error_, obs, vertices, new_faces, K, num_obs, Sidxij);
+        compute_reprojection_jacobian(V_, g_, error_, obs, vertices, new_faces, K, num_obs, Sidxij);
         compute_distance_jacobian(V_,g_,error_, vertices, new_faces, num_faces, num_obs, Sidxij);
     
-        // double lambda = 10;
-        // for(int i=0;i<num_points; i++)
-        // {
-        //     int pos;
-        //     double* ppUpa;
-        //     double sum=0;	
-        //     pos = sba_crsm_elmidx( &Sidxij, i, i);
-
-        //     pos += 1 * lambda;
-        // }
         constructCSSGN( Si, Sp, Sx, V_, Sidxij, init, v_mask_, num_points); //set CSS format using S matrix
-            for(int ii=0; ii< num_points; ii++) {
+            for(int ii=0; ii< num_points*3; ii++) {
                 Ex[ii] = g_[ii];
             //    std::cout << g_[ii] << std::endl;
             }
-            
+            // exit(1);
         solveCholmodGN( Ap, Aii, init, ordering, num_points, nnz);
 
             
@@ -198,44 +174,35 @@ void OptimizerDistanceOnly::run() {
             }
             double dx = 0;
             for(int i=0; i < num_points; i++) {
-                double update = rx[i];
-                
-
-                double d = vertices[i*3+2];
-
-
-
-                d += update;
-
-
-
-                if( d < 0) {
-                    std::abs(d);
+                vertices[i*3] += rx[i*3];
+                vertices[i*3+1] += rx[i*3+1];
+                vertices[i*3+2] += rx[i*3+2];
+                if( vertices[i*3+2] < 0) {
+                    vertices[i*3] = -1*vertices[i*3];
+                    vertices[i*3+1] = -1*vertices[i*3+1] ;
+                    vertices[i*3+2] = -1*vertices[i*3+2] ;
                 }
-                vertices[i*3+2] = d;
-
-                dx += update * update;
-
+                dx += rx[i*3]*rx[i*3];
+                dx += rx[i*3+1]*rx[i*3+1];
+                dx += rx[i*3+2]*rx[i*3+2];
             }
             double cost = 0;
-            for(int i=0; i < ( (num_faces*3)); i++) {
+            for(int i=0; i < ((num_obs*2) + (num_faces*3)); i++) {
                 cost += (error_[i] * error_[i]);
             }
-            // double er=0;
-            // for(int i=0; i < ((num_obs*2)); i++) {
-            //     er += error_[i] * error_[i];
-            // }
-            // er /= num_obs*2;
+            double er=0;
+            for(int i=0; i < ((num_obs*2)); i++) {
+                er += error_[i] * error_[i];
+            }
+            er /= num_obs*2;
             double ed = 0;
-            for(int i=0; i < ((num_faces*3)); i++) {
+            for(int i=(num_obs*2); i < ((num_obs*2) + (num_faces*3)); i++) {
                 ed += error_[i] * error_[i];
             }
-            ed /= (num_faces*3);
+            ed /= num_faces*3;
             
-            cost /= ((num_faces*3));
-            // std::cout << "Itertation: " << iter <<" Error: " << sqrt(cost) << " dx: " << 0 << " ed: " << ed << std::endl;
-
-            std::cout << "Itertation: " << iter <<" Error: " << sqrt(cost) << " dx: " << dx / num_points << " ed: " << ed << std::endl;
+            cost /= ((num_obs*2) + (num_faces*3));
+            std::cout << "Itertation: " << iter <<" Error: " << sqrt(cost) << " dx: " << dx / num_points <<" er: " << er << " ed: " << ed << std::endl;
 
             // if((cost < 0.000001) || (dx < 0.000001))
             //     break;
@@ -243,19 +210,6 @@ void OptimizerDistanceOnly::run() {
                 break;
     }
 
-
-    for(int i = 0; i < num_points; i++) {
-        double psi = vertices_[i*3];
-        double theta = vertices_[i*3+1];
-        double d = vertices_[i*3+2];
-
-        vertices_[i*3] = std::sin(psi) * std::cos(theta) * d;
-        vertices_[i*3+1] = std::sin(theta) * d;
-        vertices_[i*3+2] = std::cos(psi) * std::cos(theta) * d;
-        
-    }
-
-    
     for(auto map1 : triangle_unordered_mapping_) {
         Eigen::Vector3i e_triangle = e_triangles_[map1.first];
         int *triangle = &triangles_[map1.second * 3]; 
@@ -308,7 +262,7 @@ void OptimizerDistanceOnly::run() {
     
 }
 
-void OptimizerDistanceOnly::initialize() {
+void Optimizer::initialize() {
     
     for(auto& unordered_map: triangle_unordered_mapping_) {
         Eigen::Vector3i triangle = e_triangles_[unordered_map.first];
@@ -317,61 +271,7 @@ void OptimizerDistanceOnly::initialize() {
         triangles_.push_back(vertices_unordered_mapping_[triangle.z()]);
     }
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    // change the vertices to unit vector and depth!
-
-    for(int i=0; i < number_observation_; i++) {
-        int face_id = observation_[i*6];
-        // if(face_id == id_tmp)
-        //     continue;
-        // id_tmp = face_id;
-        double alpha = observation_[i*6+3];
-        double beta = observation_[i*6+4];
-        double gamma = observation_[i*6+5];
-        // std::cout << "begin\n";
-       
-        double *vertex, *vertex1;
-        if(int(alpha) == 1) {
-            vertex = e_vertices_[e_triangles_[face_id].x()].data();
-            vertex1 = e_reference_[e_triangles_[face_id].x()].data();
-            // tmp = e_triangles_[face_id].x();
-        } else if (int(beta) == 1)
-        {
-            vertex = e_vertices_[e_triangles_[face_id].y()].data();
-            vertex1 = e_reference_[e_triangles_[face_id].y()].data();
-            // tmp = e_triangles_[face_id].y();
-
-        } else if (int(gamma) == 1)
-        {
-            vertex = e_vertices_[e_triangles_[face_id].z()].data();
-            vertex1 = e_reference_[e_triangles_[face_id].z()].data();
-            // tmp = e_triangles_[face_id].z();
-    
-        } else {
-            // std::cout << alpha << " "<< beta << " "<< gamma << "dasd " << std::endl;
-
-            continue;
-        }
-        // std::cout << alpha << " "<< beta << " "<< gamma << " " << std::endl;
-        // std::cout << vertex[0] << " "<< vertex[1] << " "<< vertex[2] << " " << std::endl;
-        Eigen::Vector3d uvt;
-        uvt << observation_[i*6+1], observation_[i*6+2], 1;
-
-        uvt = invK_ * uvt; 
-
-        double phi = std::atan2(uvt[0], uvt[2]);
-        double theta = std::atan2(uvt[1], std::sqrt(uvt[0] * uvt[0] + uvt[2]*uvt[2]));
-        double d = std::sqrt(vertex1[0]*vertex1[0] + vertex1[1]*vertex1[1] + vertex1[2]*vertex1[2]);
-        // std::cout << phi << " "<< theta << " "<< d << " " << std::endl;
-        
-        vertex[0] = phi;
-        vertex[1] = theta;
-        vertex[2] = d;
-        // break;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // double vertices[number_vertices_*3];
 
     reference_ = (double*)malloc(number_vertices_*3*sizeof(double));
     vertices_ = (double*)malloc(number_vertices_*3*sizeof(double));
@@ -430,41 +330,32 @@ void OptimizerDistanceOnly::initialize() {
 
     constructSmask( Sidxij, num_points, nnz, v_mask_); //, Uidxij, v_mask);
 
-    V_	=	(double *)malloc(nnz  * sizeof(double));
-    g_	=	(double *)malloc(num_points  * sizeof(double));
+    V_	=	(double *)malloc(nnz * 3 * 3 * sizeof(double));
+    g_	=	(double *)malloc(num_points * 3 * sizeof(double));
     // dx	=	(double *)malloc((num_points*3)*sizeof(double));
-    error_ = (double *)malloc(((num_faces * 3))*sizeof(double));
+    error_ = (double *)malloc(((num_obs*2) + (num_faces*3))*sizeof(double));
 
     cholmod_start (&m_cS) ; 
     Ap_  = (int*)malloc((num_points + 1)*sizeof(int));
 	Aii_ = (int*)malloc(nnz*sizeof(int));
 	constructAuxCSSGN( Ap_, Aii_, v_mask_, num_points );
 
-    m_cholSparseE = cholmod_zeros( num_points, 1, CHOLMOD_REAL, &m_cS); // Achtung! Warum sieben?
+    m_cholSparseE = cholmod_zeros( 3*num_points, 1, CHOLMOD_REAL, &m_cS); // Achtung! Warum sieben?
 	Ex_ = (double*)m_cholSparseE->x;
-	nMaxS_ = nnz;//(nnz-num_points)*1+num_points*1;	//maximum non-zero element in S matrix 
+	nMaxS_ = (nnz-num_points)*9+num_points*6;	//maximum non-zero element in S matrix 
 
-    m_cholSparseS = cholmod_allocate_sparse(num_points,num_points,nMaxS_,true,true,1,CHOLMOD_REAL,&m_cS); 
+    m_cholSparseS = cholmod_allocate_sparse(num_points*3,num_points*3,nMaxS_,true,true,1,CHOLMOD_REAL,&m_cS); 
     
 	
 	Sp_ = (int*)m_cholSparseS->p;		//column pointer
 	Si_ = (int*)m_cholSparseS->i;		//row pointer
-
-    // int id_tmp = -1;
-    // int tmp;
     
-
-    // double *vertex1;
-    // vertex1 = e_vertices_[tmp].data();
-    // std::cout << vertex1[0] << " "<< vertex1[1] << " "<< vertex1[2] << " test" << std::endl;
-    // std::cout << "end\n";
-    // exit(1);
     // Sx_ = NULL;  
     // init_ = false;
     // ordering_ = true;
 }
 
-void OptimizerDistanceOnly::setParamater(double *observation, std::unordered_map<int,int> &unordered_mapping_vertices, std::unordered_map<int,int> &unordered_mapping_triangles, int number_vertices, int number_triangles, int number_observation) {
+void Optimizer::setParamater(double *observation, std::unordered_map<int,int> &unordered_mapping_vertices, std::unordered_map<int,int> &unordered_mapping_triangles, int number_vertices, int number_triangles, int number_observation) {
     observation_ = observation;
     vertices_unordered_mapping_ = unordered_mapping_vertices;
     triangle_unordered_mapping_ = unordered_mapping_triangles;
@@ -473,8 +364,76 @@ void OptimizerDistanceOnly::setParamater(double *observation, std::unordered_map
     number_observation_ = number_observation;
 }
 
+void Optimizer::compute_reprojection_error(double *e, double *obs, double *xyz, int *faces, Eigen::Matrix3d &K, int num_obs) {
+    for(int obs_id=0; obs_id < num_obs; obs_id++) {
+        double fx = K(0,0);
+        double fy = K(1,1);
+        double cx = K(0,2);
+        double cy = K(1,2);
+        //  auto it = triangle_unordered_mapping_.find(obs[obs_id * 6]); // Suche nach dem Schlüssel 2
+        // if (it != triangle_unordered_mapping_.end()) {
+        //     std::cout << "Element gefunden! Wert: " << it->second << std::endl;
+        // } else {
+        //     std::cout << "Element nicht gefunden!" << std::endl;
+        // }
+        // std::cout << obs[obs_id * 6] << " " << obs[obs_id * 6 +1] << " " << obs[obs_id * 6 +2] << " " 
+        // << obs[obs_id * 6 +3] << " " << obs[obs_id * 6 + 4] << " " << obs[obs_id * 6 + 5] << " " << std::endl;
+        int face_id = triangle_unordered_mapping_[obs[obs_id * 6]];
+        int f1 = faces[face_id*3];
+        int f2 = faces[face_id*3+1];
+        int f3 = faces[face_id*3+2];
 
-void OptimizerDistanceOnly::sba_crsm_alloc(struct sba_crsm *sm, int nr, int nc, int nnz)
+        // double v1[] = {xyz[f1*3],xyz[f1*3+1],xyz[f1*3+2]};
+        double *v1= &xyz[f1*3];
+        // double v2 = {xyz[f2*3],xyz[f2*3+1],xyz[f2*3+2]};
+        double *v2 = &xyz[f2*3];
+        // double v3 = {xyz[f3*3],xyz[f3*3+1],xyz[f3*3+2]};
+        double *v3 = &xyz[f3*3];
+
+        double alpha = obs[obs_id * 6 + 3];
+        double beta = obs[obs_id * 6 + 4];
+        double gamma = obs[obs_id * 6 + 5];
+
+        double z_u = obs[obs_id * 6 + 1];
+        double z_v = obs[obs_id * 6 + 2];
+
+        //  std::cout << v1[0] << " " << v1[1] << " " << v1[2] << std::endl;
+        
+        double p[3] = {v1[0] * alpha + v2[0]*beta + v3[0]*gamma,
+                       v1[1] * alpha + v2[1]*beta + v3[1]*gamma,
+                       v1[2] * alpha + v2[2]*beta + v3[2]*gamma};
+
+        double a = fx * p[0] / p[2] + cx;
+        double b = fy * p[1] / p[2] + cy;
+        double e_u = z_u - (fx * p[0] / p[2] + cx);
+        double e_v = z_v - (fy * p[1] / p[2] + cy);
+        
+        e[obs_id*2 + 0] = e_u;
+        e[obs_id*2 + 1] = e_v;
+
+
+
+        // face_id = obs[obs_id * 6];
+        // f1 = e_triangles_[face_id].x();
+        // f2 = e_triangles_[face_id].y();
+        // f3 = e_triangles_[face_id].z();
+
+        // double *v1_n = e_vertices_[f1].data();
+        // double *v2_n = e_vertices_[f2].data();
+        // double *v3_n = e_vertices_[f3].data();
+        // if(!((v2[0] == v2_n[0]) && (v2[1] == v2_n[1]) && (v2[2] == v2_n[2])))
+        // {
+        //     std::cout << v1[0] << " " << v1[1] << " " << v1[2] << " "<< v2[0] << " " << v2[1] << " " << v2[2] << " "<< v3[0] << " " << v3[1] << " " << v3[2] << std::endl;
+        //     std::cout << v1_n[0] << " " << v1_n[1] << " " << v1_n[2] << " "<< v2_n[0] << " " << v2_n[1] << " " << v2_n[2] << " "<< v3_n[0] << " " << v3_n[1] << " " << v3_n[2] << std::endl<< std::endl;
+     
+        // }
+        // std::cout << v1[0] << " " << v1[1] << " " << v1[2] << " "<< v2[0] << " " << v2[1] << " " << v2[2] << " "<< v3[0] << " " << v3[1] << " " << v3[2] << std::endl;
+        // std::cout << v1_n[0] << " " << v1_n[1] << " " << v1_n[2] << " "<< v2_n[0] << " " << v2_n[1] << " " << v2_n[2] << " "<< v3_n[0] << " " << v3_n[1] << " " << v3_n[2] << std::endl<< std::endl;
+    }
+    // exit(1);
+}
+
+void Optimizer::sba_crsm_alloc(struct sba_crsm *sm, int nr, int nc, int nnz)
 {
 	int msz;
 	sm->nr=nr;
@@ -490,7 +449,7 @@ void OptimizerDistanceOnly::sba_crsm_alloc(struct sba_crsm *sm, int nr, int nc, 
 	sm->rowptr=sm->colidx+nnz;
 }
 
-void OptimizerDistanceOnly::sba_crsm_free(struct sba_crsm *sm)
+void Optimizer::sba_crsm_free(struct sba_crsm *sm)
 {
 	 sm->nr=sm->nc=sm->nnz=-1;
 	free(sm->val);
@@ -498,7 +457,7 @@ void OptimizerDistanceOnly::sba_crsm_free(struct sba_crsm *sm)
 }
 
 /* returns the index of the (i, j) element. No bounds checking! */ // from PBA
-int OptimizerDistanceOnly::sba_crsm_elmidx(struct sba_crsm *sm, int i, int j)
+int Optimizer::sba_crsm_elmidx(struct sba_crsm *sm, int i, int j)
 {
 	int low, high, mid, diff;
 
@@ -521,7 +480,7 @@ int OptimizerDistanceOnly::sba_crsm_elmidx(struct sba_crsm *sm, int i, int j)
 	return -1; /* not found */
 }
 
-void OptimizerDistanceOnly::constructSmask( sba_crsm& Sidxij, int m, int& m_nS, char* m_smask)//, sba_crsm& Uidxij, char* m_umask)
+void Optimizer::constructSmask( sba_crsm& Sidxij, int m, int& m_nS, char* m_smask)//, sba_crsm& Uidxij, char* m_umask)
 {
 	int i, j, k, ii, jj;
     for ( i = 0; i < m*m; i++ )
@@ -554,17 +513,17 @@ void OptimizerDistanceOnly::constructSmask( sba_crsm& Sidxij, int m, int& m_nS, 
 
 
 
-void OptimizerDistanceOnly::storeInG_distance(double *g, double J, double *e) {
-    g[0] += -J*e[0];
-    // g[1] += -J[1]*e[0];
-    // g[2] += -J[2]*e[0];
+void Optimizer::storeInG_distance(double *g, double *J, double *e) {
+    g[0] += -J[0]*e[0];
+    g[1] += -J[1]*e[0];
+    g[2] += -J[2]*e[0];
 
 }
 
-void OptimizerDistanceOnly::storeInV_distance(double* V, int idx1, int idx2, double J1, double J2, sba_crsm& Uidxij) {
+void Optimizer::storeInV_distance(double* V, int idx1, int idx2, double* J1, double* J2, sba_crsm& Uidxij) {
     int pos;
     double* ppUpa;
-    double JJ1, JJ2;
+    double *JJ1, *JJ2;
     double sum=0;	
     if (idx1 < idx2) {
         JJ1 = J1;
@@ -579,20 +538,20 @@ void OptimizerDistanceOnly::storeInV_distance(double* V, int idx1, int idx2, dou
     if(pos == -1) {
         std::cerr << "Pos -1 in StoreInV" << std::endl; 
     }
-    ppUpa = V + pos;
-    ppUpa[0] += JJ1 * JJ2;
-    // ppUpa[1] += JJ1[0] * JJ2[1];
-    // ppUpa[2] += JJ1[0] * JJ2[2];
-    // ppUpa[3] += JJ1[1] * JJ2[0];
-    // ppUpa[4] += JJ1[1] * JJ2[1];
-    // ppUpa[5] += JJ1[1] * JJ2[2];
-    // ppUpa[6] += JJ1[2] * JJ2[0];
-    // ppUpa[7] += JJ1[2] * JJ2[1];
-    // ppUpa[8] += JJ1[2] * JJ2[2];
+    ppUpa = V + pos * (3*3);
+    ppUpa[0] += JJ1[0] * JJ2[0];
+    ppUpa[1] += JJ1[0] * JJ2[1];
+    ppUpa[2] += JJ1[0] * JJ2[2];
+    ppUpa[3] += JJ1[1] * JJ2[0];
+    ppUpa[4] += JJ1[1] * JJ2[1];
+    ppUpa[5] += JJ1[1] * JJ2[2];
+    ppUpa[6] += JJ1[2] * JJ2[0];
+    ppUpa[7] += JJ1[2] * JJ2[1];
+    ppUpa[8] += JJ1[2] * JJ2[2];
     
 }
 
-void OptimizerDistanceOnly::storeInV_distance(double* V, int idx, double J, sba_crsm& Uidxij) {
+void Optimizer::storeInV_distance(double* V, int idx, double* J, sba_crsm& Uidxij) {
     int pos;
     double* ppUpa;
     double sum=0;	
@@ -601,18 +560,18 @@ void OptimizerDistanceOnly::storeInV_distance(double* V, int idx, double J, sba_
     if(pos == -1) {
         std::cerr << "Pos -1 in StoreInV" << std::endl; 
     }
-    ppUpa = V + pos;
-    ppUpa[0] += J * J;
-    // ppUpa[1] += J[0] * J[1];
-    // ppUpa[2] += J[0] * J[2];
+    ppUpa = V + pos * (3*3);
+    ppUpa[0] += J[0] * J[0];
+    ppUpa[1] += J[0] * J[1];
+    ppUpa[2] += J[0] * J[2];
 
-    // ppUpa[4] += J[1] * J[1];
-    // ppUpa[5] += J[1] * J[2];
+    ppUpa[4] += J[1] * J[1];
+    ppUpa[5] += J[1] * J[2];
 
-    // ppUpa[8] += J[2] * J[2];
+    ppUpa[8] += J[2] * J[2];
 }
 
-void OptimizerDistanceOnly::compute_distance_jacobian(double *V, double *g, double *error, double *xyz, int *faces, int num_faces, int offset, sba_crsm& Uidxij) {
+void Optimizer::compute_distance_jacobian(double *V, double *g, double *error, double *xyz, int *faces, int num_faces, int offset, sba_crsm& Uidxij) {
     int counter = 0;
     for(int i=0;i < num_faces; i++) {
         
@@ -620,17 +579,10 @@ void OptimizerDistanceOnly::compute_distance_jacobian(double *V, double *g, doub
         int f2 = faces[i*3+1];
         int f3 = faces[i*3+2];
 
-        Eigen::Vector3d v1, v2, v3, v12, v13, v23, u1,u2,u3;
-        v1 << std::sin(xyz[f1*3]) * std::cos(xyz[f1*3+1]) * xyz[f1*3+2], std::sin(xyz[f1*3+1]) * xyz[f1*3+2], std::cos(xyz[f1*3]) * std::cos(xyz[f1*3+1]) * xyz[f1*3+2];
-        v2 << std::sin(xyz[f2*3]) * std::cos(xyz[f2*3+1]) * xyz[f2*3+2], std::sin(xyz[f2*3+1]) * xyz[f2*3+2], std::cos(xyz[f2*3]) * std::cos(xyz[f2*3+1]) * xyz[f2*3+2];
-        v3 << std::sin(xyz[f3*3]) * std::cos(xyz[f3*3+1]) * xyz[f3*3+2], std::sin(xyz[f3*3+1]) * xyz[f3*3+2], std::cos(xyz[f3*3]) * std::cos(xyz[f3*3+1]) * xyz[f3*3+2];
-
-
-        u1 << std::sin(xyz[f1*3]) * std::cos(xyz[f1*3+1]), std::sin(xyz[f1*3+1]), std::cos(xyz[f1*3]) * std::cos(xyz[f1*3+1]);
-        u2 << std::sin(xyz[f2*3]) * std::cos(xyz[f2*3+1]), std::sin(xyz[f2*3+1]), std::cos(xyz[f2*3]) * std::cos(xyz[f2*3+1]);
-        u3 << std::sin(xyz[f3*3]) * std::cos(xyz[f3*3+1]), std::sin(xyz[f3*3+1]), std::cos(xyz[f3*3]) * std::cos(xyz[f3*3+1]);
-
-
+        Eigen::Vector3d v1, v2, v3, v12, v13, v23;
+        v1 << xyz[f1*3], xyz[f1*3+1], xyz[f1*3+2];
+        v2 << xyz[f2*3], xyz[f2*3+1], xyz[f2*3+2];
+        v3 << xyz[f3*3], xyz[f3*3+1], xyz[f3*3+2];
 
         double d12, d13, d23;
         v12 = v1-v2;
@@ -640,51 +592,40 @@ void OptimizerDistanceOnly::compute_distance_jacobian(double *V, double *g, doub
         v23 = v2 - v3;
         d23 = v23.norm();
 
-        double J12_1, J12_2, J13_1, J13_3, J23_2, J23_3;
+        double J12_1[3], J12_2[3], J13_1[3], J13_3[3], J23_2[3], J23_3[3];
 
-        J12_1 = u1[0]*v12[0] / d12 + u1[1]*v12[1] / d12 + u1[2]*v12[2] / d12;
-        J13_1 = u1[0]*v13[0] / d13 + u1[1]*v13[1] / d13 + u1[2]*v13[2] / d13;
+        J12_1[0] = v12[0] / (d12);
+        J12_1[1] = v12[1] / (d12);
+        J12_1[2] = v12[2] / (d12);
 
-        J12_2 = -u2[0]*v12[0] / d12 + (-u2[1]*v12[1] / d12) + (-u2[2]*v12[2] / d12);
-        J23_3 = u2[0]*v23[0] / d23 + u2[1]*v23[1] / d23 + u2[2]*v23[2] / d23;
+        J13_1[0] = v13[0] / (d13);
+        J13_1[1] = v13[1] / (d13);
+        J13_1[2] = v13[2] / (d13);
 
-        J13_3 = -u3[0]*v13[0] / d13 + (-u3[1]*v13[1] / d13) + (-u3[2]*v13[2] / d13);
-        J23_3 = -u3[0]*v23[0] / d23 + (-u3[1]*v23[1] / d23) + (-u3[2]*v23[2] / d23);
+        J23_2[0] = v23[0] / (d23);
+        J23_2[1] = v23[1] / (d23);
+        J23_2[2] = v23[2] / (d23);
 
+        J12_2[0] = -v12[0] / (d12);
+        J12_2[1] = -v12[1] / (d12);
+        J12_2[2] = -v12[2] / (d12);
 
-
-        // J12_1[0] = v12[0] / (d12);
-        // J12_1[1] = v12[1] / (d12);
-        // J12_1[2] = v12[2] / (d12);
-
-        // J13_1[0] = v13[0] / (d13);
-        // J13_1[1] = v13[1] / (d13);
-        // J13_1[2] = v13[2] / (d13);
-
-        // J23_2[0] = v23[0] / (d23);
-        // J23_2[1] = v23[1] / (d23);
-        // J23_2[2] = v23[2] / (d23);
-
-        // J12_2[0] = -v12[0] / (d12);
-        // J12_2[1] = -v12[1] / (d12);
-        // J12_2[2] = -v12[2] / (d12);
-
-        // J13_3[0] = -v13[0] / (d13);
-        // J13_3[1] = -v13[1] / (d13);
-        // J13_3[2] = -v13[2] / (d13);
+        J13_3[0] = -v13[0] / (d13);
+        J13_3[1] = -v13[1] / (d13);
+        J13_3[2] = -v13[2] / (d13);
         
-        // J23_3[0] = -v23[0] / (d23);
-        // J23_3[1] = -v23[1] / (d23);
-        // J23_3[2] = -v23[2] / (d23);
+        J23_3[0] = -v23[0] / (d23);
+        J23_3[1] = -v23[1] / (d23);
+        J23_3[2] = -v23[2] / (d23);
 
-        storeInG_distance(g+f1, J12_1, error + counter);
-        storeInG_distance(g+f2, J12_2, error + counter);
+        storeInG_distance(g+f1*3, J12_1, error + offset*2 + counter);
+        storeInG_distance(g+f2*3, J12_2, error + offset*2 + counter);
         counter++;
-        storeInG_distance(g+f1, J13_1, error  + counter);
-        storeInG_distance(g+f3, J13_3, error  + counter);
+        storeInG_distance(g+f1*3, J13_1, error + offset*2 + counter);
+        storeInG_distance(g+f3*3, J13_3, error + offset*2 + counter);
         counter++;
-        storeInG_distance(g+f2, J23_2, error  + counter);
-        storeInG_distance(g+f3, J23_3, error  + counter);
+        storeInG_distance(g+f2*3, J23_2, error + offset*2 + counter);
+        storeInG_distance(g+f3*3, J23_3, error + offset*2 + counter);
         counter++;
         // storeInG(g+f1*3, J1, error+obs_id);
 
@@ -705,7 +646,7 @@ void OptimizerDistanceOnly::compute_distance_jacobian(double *V, double *g, doub
 }
 
 
-void OptimizerDistanceOnly::compute_distance_error(double *error, double *xyz, double *ref,int *faces, int number_faces, int offset) {
+void Optimizer::compute_distance_error(double *error, double *xyz, double *ref,int *faces, int number_faces, int offset) {
     int counter = 0;
     for(int i=0;i<number_faces; i++) {
         
@@ -714,12 +655,9 @@ void OptimizerDistanceOnly::compute_distance_error(double *error, double *xyz, d
         int f3 = faces[i*3+2];
 
         Eigen::Vector3d v1, v2, v3, v1_ref, v2_ref, v3_ref;
-        // std::cout << "\n\n\n" << xyz[f1*3] << " " << xyz[f1*3+1] << " " << xyz[f1*3+2] << std::endl;
-        // std::cout << "\n\n\n" << ref[f1*3] << " " << ref[f1*3+1] << " " << ref[f1*3+2] << std::endl;
-        // exit(12);
-        v1 << std::sin(xyz[f1*3]) * std::cos(xyz[f1*3+1]) * xyz[f1*3+2], std::sin(xyz[f1*3+1]) * xyz[f1*3+2], std::cos(xyz[f1*3]) * std::cos(xyz[f1*3+1]) * xyz[f1*3+2];
-        v2 << std::sin(xyz[f2*3]) * std::cos(xyz[f2*3+1]) * xyz[f2*3+2], std::sin(xyz[f2*3+1]) * xyz[f2*3+2], std::cos(xyz[f2*3]) * std::cos(xyz[f2*3+1]) * xyz[f2*3+2];
-        v3 << std::sin(xyz[f3*3]) * std::cos(xyz[f3*3+1]) * xyz[f3*3+2], std::sin(xyz[f3*3+1]) * xyz[f3*3+2], std::cos(xyz[f3*3]) * std::cos(xyz[f3*3+1]) * xyz[f3*3+2];
+        v1 << xyz[f1*3], xyz[f1*3+1], xyz[f1*3+2];
+        v2 << xyz[f2*3], xyz[f2*3+1], xyz[f2*3+2];
+        v3 << xyz[f3*3], xyz[f3*3+1], xyz[f3*3+2];
 
         v1_ref << ref[f1*3], ref[f1*3+1], ref[f1*3+2];
         v2_ref << ref[f2*3], ref[f2*3+1], ref[f2*3+2];
@@ -737,18 +675,149 @@ void OptimizerDistanceOnly::compute_distance_error(double *error, double *xyz, d
         double e1 = d12 - d12_ref;
         double e2 = d13 - d13_ref;
         double e3 = d23 - d23_ref;
-        error[counter] = e1;
+        error[offset*2 + counter] = e1;
         counter++;
-        error[counter] = e2;
+        error[offset*2 + counter] = e2;
         counter++;
-        error[counter] = e3;
+        error[offset*2 + counter] = e3;
         counter++;
     }
 }
 
+void Optimizer::storeInG(double *g, double *J, double *e) {
+    g[0] += -(J[0] * e[0] + J[3] * e[1]);
+    g[1] += -(J[1] * e[0] + J[4] * e[1]);
+    g[2] += -(J[2] * e[0] + J[5] * e[1]);
+    // cout << g[0] << " " << g[1] << " "<< g[2] << endl;
+    // cout << "" <<endl;
+}
 
+void Optimizer::storeInV(double* V, int idx, double* J, sba_crsm& Uidxij) {
+    int pos;
+    double* ppUpa;
+    double sum=0;	
+    pos = sba_crsm_elmidx( &Uidxij, idx, idx);
+    
+    if(pos == -1) {
+        std::cerr << "Pos -1 in StoreInV" << std::endl; 
+    }
+    ppUpa = V + pos * (3*3);
 
-void OptimizerDistanceOnly::constructAuxCSSGN( int *Ap, int *Aii, char* m_smask, int m_ncams)
+    for(int i=0; i < 3; i++) {
+        for(int j=i; j < 3; j++) {
+            sum = 0;
+            for ( int k = 0; k < 2; k++ ) {
+				sum += J[i+k*3]*J[j+k*3];
+            }
+            ppUpa[i*3+j] += sum; 
+            // if( i<=j)
+            //     std::cout << sum << "\t\t";
+            // else
+            //     std::cout << 0 << "\t\t";
+        }
+        // cout << "\n";
+    }
+    // exit(1);
+}
+
+void Optimizer::storeInV(double* V, int idx1, int idx2, double* J1, double* J2, sba_crsm& Uidxij) {
+    int pos;
+    double* ppUpa;
+    double *JJ1, *JJ2;
+    double sum=0;	
+    if (idx1 < idx2) {
+        JJ1 = J1;
+        JJ2 = J2;
+        pos = sba_crsm_elmidx( &Uidxij, idx1, idx2);
+    } else {
+        JJ1 = J2;
+        JJ2 = J1;
+        pos = sba_crsm_elmidx( &Uidxij, idx2, idx1); 
+    }
+    if(pos == -1) {
+        std::cerr << "Pos -1 in StoreInV" << std::endl; 
+    }
+    ppUpa = V + pos * (3*3);
+    for(int i=0; i < 3; i++) {
+        for(int j=0; j < 3; j++) {
+            sum = 0;
+            for ( int k = 0; k < 2; k++ ) {
+				sum += JJ1[i+k*3]*JJ2[j+k*3];
+            }
+            ppUpa[i*3+j] += sum; // Vill noch anpassen
+        }
+    }
+}
+
+void Optimizer::compute_reprojection_jacobian(double *V, double *g, double *error, double *obs, double *xyz, int *faces, Eigen::Matrix3d K, int num_obs, sba_crsm& Sidxij) {
+    for(int obs_id=0; obs_id < num_obs; obs_id++) {
+        double fx = K(0,0);
+        double fy = K(1,1);
+        double cx = K(0,2);
+        double cy = K(1,2);
+
+        int face_id = triangle_unordered_mapping_[obs[obs_id * 6]];
+
+        int f1 = faces[face_id*3];
+        int f2 = faces[face_id*3+1];
+        int f3 = faces[face_id*3+2];
+
+        double *v1= &xyz[f1*3];
+        double *v2 = &xyz[f2*3];
+        double *v3 = &xyz[f3*3];
+
+        double alpha = obs[obs_id * 6 + 3];
+        double beta = obs[obs_id * 6 + 4];
+        double gamma = obs[obs_id * 6 + 5];
+
+        double x = v1[0] * alpha + v2[0]*beta + v3[0]*gamma;
+        double y = v1[1] * alpha + v2[1]*beta + v3[1]*gamma;
+        double z = v1[2] * alpha + v2[2]*beta + v3[2]*gamma;
+
+        double J1[6], J2[6], J3[6];
+        J1[0] = -fx/z * alpha;
+        J1[1] = 0;
+        J1[2] = fx*x/(z*z) * alpha;
+
+        J1[3] = 0;
+        J1[4] = -fy/z * alpha;
+        J1[5] = fy*y/(z*z) * alpha;
+
+        J2[0] = -fx/z * beta;
+        J2[1] = 0;
+        J2[2] = fx*x/(z*z) * beta;
+
+        J2[3] = 0;
+        J2[4] = -fy/z * beta;
+        J2[5] = fy*y/(z*z) * beta;
+
+        J3[0] = -fx/z * gamma;
+        J3[1] = 0;
+        J3[2] = fx*x/(z*z) * gamma;
+
+        J3[3] = 0;
+        J3[4] = -fy/z * gamma;
+        J3[5] = fy*y/(z*z) * gamma;
+
+        storeInG(g+f1*3, J1, error+obs_id * 2);
+        storeInG(g+f2*3, J2, error+obs_id * 2);
+        storeInG(g+f3*3, J3, error+obs_id * 2);
+
+        storeInV(V, f1, J1, Sidxij);
+        storeInV(V, f2, J2, Sidxij);
+        storeInV(V, f3, J3, Sidxij);
+
+        // if(f1==1663 || f2==1663 || f3==1663 ){
+        //     cout << "asdssda\n\n";
+        // }        
+
+        storeInV(V, f1, f2, J1, J2, Sidxij);
+        storeInV(V, f1, f3, J1, J3, Sidxij);
+        storeInV(V, f2, f3, J2, J3, Sidxij);
+    }
+}
+
+void Optimizer::constructAuxCSSGN( int *Ap, int *Aii, char* m_smask, int m_ncams)
 {
 	int* Cp = Ap;
 	int* Ci = Aii;
@@ -770,7 +839,7 @@ void OptimizerDistanceOnly::constructAuxCSSGN( int *Ap, int *Aii, char* m_smask,
 	*Cp=nZ;
 }
 
-void OptimizerDistanceOnly::constructCSSGN( int* Si, int* Sp, double* Sx, double* S, sba_crsm& Sidxij, bool init, char* m_smask, int m_ncams)
+void Optimizer::constructCSSGN( int* Si, int* Sp, double* Sx, double* S, sba_crsm& Sidxij, bool init, char* m_smask, int m_ncams)
 {
 	int ii, jj, jjj, k;
 	int pos1, m = m_ncams;
@@ -783,7 +852,7 @@ void OptimizerDistanceOnly::constructCSSGN( int* Si, int* Sp, double* Sx, double
 	{
 		for ( ii = 0; ii < m; ii++ )  //column
 		{
-			for ( k = 0; k < 1; k++ )
+			for ( k = 0; k < 3; k++ )
 			{
 				*Sp = nZ;
 				// if ((ii*6+k)==(9+nft))
@@ -796,7 +865,7 @@ void OptimizerDistanceOnly::constructCSSGN( int* Si, int* Sp, double* Sx, double
 					{   
 
 						pos1 = sba_crsm_elmidx( &Sidxij, jj, ii );
-						ptr5 = S + pos1*1;
+						ptr5 = S + pos1*9;
 						
 						if( ii == jj )
 						{
@@ -808,8 +877,8 @@ void OptimizerDistanceOnly::constructCSSGN( int* Si, int* Sp, double* Sx, double
 									// 	*Si++ = jj*6+jjj - 6;
 									// else
 									// 	*Si++ = jj*6+jjj - 7;
-                                    *Si++ = jj*1+jjj;
-									*Sx++ = ptr5[jjj*1+k];
+                                    *Si++ = jj*3+jjj;
+									*Sx++ = ptr5[jjj*3+k];
 									nZ++;
                                     // std::cout << ptr5[jjj*6+k] << std::endl;
 								// }						
@@ -818,7 +887,7 @@ void OptimizerDistanceOnly::constructCSSGN( int* Si, int* Sp, double* Sx, double
 						}
 						else
 						{
-							for ( jjj = 0; jjj < 1; jjj++)
+							for ( jjj = 0; jjj < 3; jjj++)
 							{
 								// if ((jj*6+jjj) != (9+nft) )
 								// {
@@ -827,8 +896,8 @@ void OptimizerDistanceOnly::constructCSSGN( int* Si, int* Sp, double* Sx, double
 									// else
 									// 	*Si++ = jj*6+jjj - 7;										
 
-                                    *Si++ = jj*1+jjj;
-									*Sx++ = ptr5[jjj*1+k];
+                                    *Si++ = jj*3+jjj;
+									*Sx++ = ptr5[jjj*3+k];
 									nZ++;
 								// }
 							}
@@ -846,7 +915,7 @@ void OptimizerDistanceOnly::constructCSSGN( int* Si, int* Sp, double* Sx, double
         // std::cout << "else" << std::endl;
 		for ( ii = 0; ii < m; ii++ )  //column
 		{
-			for ( k = 0; k < 1; k++ )
+			for ( k = 0; k < 3; k++ )
 			{
 				// if ((ii*6+k)==(9+nft))
 				// 	continue;
@@ -856,22 +925,22 @@ void OptimizerDistanceOnly::constructCSSGN( int* Si, int* Sp, double* Sx, double
 					if ((m_smask[jj*m+ii]==1))
 					{
 						pos1 = sba_crsm_elmidx( &Sidxij, jj, ii );
-						ptr5 = S + pos1*1;
+						ptr5 = S + pos1*9;
 
 						if( ii == jj )
 						{
 							for ( jjj = 0; jjj <= k; jjj++)
 							{
 								// if ( (jj*6+jjj) != (9+nft))
-									*Sx++ = ptr5[jjj*1+k];
+									*Sx++ = ptr5[jjj*3+k];
 							}
 						}
 						else
 						{
-							for ( jjj = 0; jjj < 1; jjj++)
+							for ( jjj = 0; jjj < 3; jjj++)
 							{
 								// if ((jj*6+jjj) != (9+nft) )
-									*Sx++ = ptr5[jjj*1+k];
+									*Sx++ = ptr5[jjj*3+k];
 							}
 						}
 					}
@@ -881,7 +950,7 @@ void OptimizerDistanceOnly::constructCSSGN( int* Si, int* Sp, double* Sx, double
 	}
 }
 
-bool OptimizerDistanceOnly::solveCholmodGN( int* Ap1, int* Aii1, bool init, bool ordering, int m_ncams, int nnz1)
+bool Optimizer::solveCholmodGN( int* Ap1, int* Aii1, bool init, bool ordering, int m_ncams, int nnz1)
 {
 	int i, j;
 	int m = m_ncams;
@@ -933,13 +1002,13 @@ bool OptimizerDistanceOnly::solveCholmodGN( int* Ap1, int* Aii1, bool init, bool
 			for ( i = 0; i < m_ncams; ++i)
 			{
 				const int &pp = blockPermutation(i);
-				int base = pp*1;
+				int base = pp*3;
                 // std::cout << pp << std::endl;
 				// int nCols= (pp==0) ? 6 : 6;
 
                 // int base =  pp*6-1;
 
-				int nCols= 1;
+				int nCols= 3;
 
 				for ( j = 0; j < nCols; ++j)
 					scalarPermutation(scalarIdx++) = base++;

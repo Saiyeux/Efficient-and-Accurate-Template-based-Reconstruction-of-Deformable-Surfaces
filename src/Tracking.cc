@@ -3,7 +3,7 @@
 #include "MeshMap.h"
 #include <iostream>
 #include <algorithm>
-
+#include<fstream>
 
 Tracking::Tracking(cv::Mat &frame, Eigen::Matrix3d K, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, int thresholdValue) :  K_(K), fx_(K(0,0)), fy_(K(1,1)), cx_(K(0,2)), cy_(K(1,2)), pre_frame_(frame),
     vertices_(vertices), triangles_(triangles), number_triangles_(triangles_.size()), number_vertices_(vertices_.size())
@@ -152,17 +152,13 @@ void Tracking::draw_correspondence(cv::Mat &frame) {
         }
     }
 }
+
+#include <fstream>
+#include <sstream>
+#include <iostream>
 void Tracking::updateObservation() {
 
     for(int obs_id=0; obs_id < obs.size()/6; obs_id++) {
-        // int face_id = obs[obs_id*6];
-        // double alpha = obs[obs_id*6+3];
-        // double beta = obs[obs_id*6+4];
-        // double gamm = obs[obs_id*6+5];
-
-        // int f1 = triangles_[face_id].x();
-        // int f2 = triangles_[face_id].y();
-        // int f3 = triangles_[face_id].z();
 
         double u = pixel_correspondence_[obs_id].x;
         double v = pixel_correspondence_[obs_id].y;
@@ -170,6 +166,32 @@ void Tracking::updateObservation() {
         obs[obs_id*6+1] = u;
         obs[obs_id*6+2] = v;
     }
+
+    // std::string file_path = "low_obs_88.txt";
+    // std::ifstream obj_file(file_path);
+    // if (!obj_file.is_open()) {
+    //     std::cerr << "Incorrect path to the Obj-file." << std::endl;
+    //     return;
+    // }
+    // std::string line;
+    // std::vector<double> tmp;
+    // while (std::getline(obj_file, line)) {
+    //     std::stringstream sstream(line);
+    //     std::string word;
+    //     sstream >> word;
+    //     tmp.push_back(std::stod(word));
+    //     sstream >> word;
+    //     tmp.push_back(std::stod(word));
+    //     sstream >> word;
+    //     tmp.push_back(std::stod(word));
+    //     sstream >> word;
+    //     tmp.push_back(std::stod(word));
+    //     sstream >> word;
+    //     tmp.push_back(std::stod(word));
+    //     sstream >> word;
+    //     tmp.push_back(std::stod(word));
+    // }
+    // obs = tmp;
 }
 
 
@@ -183,4 +205,19 @@ void Tracking::track(cv::Mat &frame, std::vector<cv::Point2f> &pixel) {
 
     cv::imshow("Frame", modifiedFrame);
     pixel = pixel_correspondence_;
+    
+    
+    
+    // static int FrameNo = 0;
+    // std::ofstream file("low_obs_" + std::to_string(FrameNo) + ".txt");
+    // FrameNo++;
+    // for(int i=0; i < obs.size()/6; i++) {
+    //     file <<  std::setprecision(precision) << std::fixed <<  obs[i*6] << " " << obs[i*6+1] << " " << obs[i*6+2] << " " << obs[i*6+3] << " " << obs[i*6+4] << " " << obs[i*6+5] << std::endl;
+    // }
+    // file.close();
+    // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    // if(FrameNo == 39)
+    //     exit(1);
+    // cv::waitKey(0);
+
 }

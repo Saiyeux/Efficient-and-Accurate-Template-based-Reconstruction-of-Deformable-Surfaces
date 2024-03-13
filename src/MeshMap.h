@@ -10,7 +10,7 @@ class OptimizerDistanceOnly;
 
 class MeshMap {
     public:
-        MeshMap(std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K);
+        MeshMap(std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K, int max_iteration, int optimization_algorithm);
         ~MeshMap();
         void setTracking(Tracking *tracking);
         std::vector<Eigen::Vector3d>& getVertices();
@@ -35,6 +35,7 @@ class MeshMap {
         double cy_ = 0;
         int number_vertices_= 0;
         int number_triangles_ = 0;
+        int optimization_algorithm_=0;
 
         std::unordered_map<int, int> triangle_unordered_mapping_;
         std::unordered_map<int, int> vertices_unordered_mapping_;

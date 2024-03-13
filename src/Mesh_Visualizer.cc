@@ -139,7 +139,6 @@ void Mesh_Visualizer::UpdateMesh(cv::Mat &frame, std::shared_ptr<open3d::geometr
         lines->lines_.push_back({triangle(2), triangle(0)});
     }
     lines->points_ = mesh->vertices_;
-
     visualizer.ClearGeometries();
     visualizer.AddGeometry(mesh);
     visualizer.AddGeometry(lines);
@@ -150,5 +149,6 @@ void Mesh_Visualizer::UpdateMesh(cv::Mat &frame, std::shared_ptr<open3d::geometr
     // visualizer.Run();
     visualizer.PollEvents();
     visualizer.UpdateRender();
+    
 
 }
