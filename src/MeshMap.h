@@ -7,10 +7,11 @@
 class Tracking;
 class Optimizer;
 class OptimizerDistanceOnly;
+class OptimizerWithoutMiddlePoint;
 
 class MeshMap {
     public:
-        MeshMap(std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K, int max_iteration, int optimization_algorithm);
+        MeshMap(std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K, int max_iteration, int optimization_algorithm, bool verbose);
         ~MeshMap();
         void setTracking(Tracking *tracking);
         std::vector<Eigen::Vector3d>& getVertices();
@@ -24,6 +25,7 @@ class MeshMap {
         Tracking *tracking_ = nullptr;
         Optimizer *optimizer_ = nullptr;
         OptimizerDistanceOnly *optimizerDistance_ = nullptr;
+        OptimizerWithoutMiddlePoint *optimizeWithout_ = nullptr;
 
         std::vector<double> obs_;
         std::vector<Eigen::Vector3d> vertices_;

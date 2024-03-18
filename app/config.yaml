@@ -3,13 +3,14 @@ System:
   reference_file_path: "../data/Hamlyn/Dense_GT3.obj"
   #std::string obj_file_path = "../data/Hamlyn/ReferenceMesh2.obj";
   #std::string obj_file_path = "../data/Hamlyn/dense reconstruction5.obj";
-  optimization_algorithm: 0 
+  optimization_algorithm: 1
   # 0: normal
   # 1: Distance Only
   # 2: Normal with only the vertices as reporjection
+  verbose: true
 
 Optimizer:
-  max_iteration: 100
+  max_iteration: 20
 
 Image:
   fx: 391.656525

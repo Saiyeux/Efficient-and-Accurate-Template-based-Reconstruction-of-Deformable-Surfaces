@@ -5,6 +5,7 @@ add_library(${PROJECT_NAME}
             Mesh_Visualizer.cc Mesh_Visualizer.h
             Extractor.cc Extractor.h
             Optimizer.cc Optimizer.h
+            OptimizerWithoutMiddlePoint.cc OptimizerWithoutMiddlePoint.h
             OptimizerDistanceOnly.cc OptimizerDistanceOnly.h)
 
 # Set output directory of the library

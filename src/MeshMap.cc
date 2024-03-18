@@ -1,20 +1,21 @@
 #include "MeshMap.h"
 #include "Tracking.h"
 #include "Optimizer.h"
+#include "OptimizerWithoutMiddlePoint.h"
 #include "OptimizerDistanceOnly.h"
 
 
 
 
-MeshMap::MeshMap(std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K, int max_iteration, int optimization_algorithm): K_(K), fx_(K(0,0)), fy_(K(1,1)), cx_(K(0,2)), cy_(K(1,2)),
+MeshMap::MeshMap(std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K, int max_iteration, int optimization_algorithm, bool verbose): K_(K), fx_(K(0,0)), fy_(K(1,1)), cx_(K(0,2)), cy_(K(1,2)),
         vertices_(vertices), triangles_(triangles), number_triangles_(triangles.size()), number_vertices_(vertices.size()), optimization_algorithm_(optimization_algorithm) {
             
             if (optimization_algorithm_ == 0)
-                optimizer_ = new Optimizer(max_iteration, vertices_, triangles_);
+                optimizer_ = new Optimizer(max_iteration, vertices_, triangles_, verbose);
             else if (optimization_algorithm_ == 1)
-                optimizerDistance_ = new OptimizerDistanceOnly(max_iteration, vertices, triangles_, K);
-            else
-                optimizer_ = new Optimizer(max_iteration, vertices_, triangles_);
+                optimizerDistance_ = new OptimizerDistanceOnly(max_iteration, vertices, triangles_, K, verbose);
+            else if (optimization_algorithm_ == 2)
+                optimizeWithout_ = new OptimizerWithoutMiddlePoint(max_iteration, vertices_, triangles_, verbose);
                 
         }
 
@@ -148,5 +149,10 @@ void MeshMap::unordered_map() {
         optimizerDistance_->initialize();
         optimizerDistance_->run();
         optimizerDistance_->getVertices(vertices_);
+    } else if (optimization_algorithm_ == 2) {
+        optimizeWithout_->setParamater(&obs_[0], vertices_unordered_mapping_, triangle_unordered_mapping_, vertices_unordered_mapping_.size(), triangle_unordered_mapping_.size(), obs_.size() / 6);
+        optimizeWithout_->initialize();
+        optimizeWithout_->run();
+        optimizeWithout_->getVertices(vertices_);
     }
 }

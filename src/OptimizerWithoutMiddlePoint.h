@@ -9,7 +9,7 @@
 #include <opencv2/opencv.hpp>
 #include <chrono>
 
-struct sba_crsm	
+struct OptimizerWithoutMiddlePoint_sba_crsm	
 {
     int nr, nc;   
     int nnz;      
@@ -18,9 +18,9 @@ struct sba_crsm
     int *rowptr;  
 };
 
-class Optimizer {
+class OptimizerWithoutMiddlePoint {
     public:
-        Optimizer(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, bool verbose);
+        OptimizerWithoutMiddlePoint(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, bool verbose);
 
         void setParamater(double *observation, std::unordered_map<int,int> &unordered_mapping_vertices, std::unordered_map<int,int> &unordered_mapping_triangles, int number_vertices, int number_triangles, int number_observation);
         void initialize();
@@ -28,23 +28,23 @@ class Optimizer {
         void getVertices(std::vector<Eigen::Vector3d> &vertices);
 
     private:
-        void sba_crsm_alloc(struct sba_crsm *sm, int nr, int nc, int nnz);
-        void sba_crsm_free(struct sba_crsm *sm);
-        int sba_crsm_elmidx(struct sba_crsm *sm, int i, int j);
-        void constructSmask( sba_crsm& Sidxij, int m, int& m_nS, char* m_smask);
+        void OptimizerWithoutMiddlePoint_sba_crsm_alloc(struct OptimizerWithoutMiddlePoint_sba_crsm *sm, int nr, int nc, int nnz);
+        void OptimizerWithoutMiddlePoint_sba_crsm_free(struct OptimizerWithoutMiddlePoint_sba_crsm *sm);
+        int OptimizerWithoutMiddlePoint_sba_crsm_elmidx(struct OptimizerWithoutMiddlePoint_sba_crsm *sm, int i, int j);
+        void constructSmask( OptimizerWithoutMiddlePoint_sba_crsm& Sidxij, int m, int& m_nS, char* m_smask);
         void compute_reprojection_error(double *e, double *obs, double *xyz, int *faces, Eigen::Matrix3d &K, int num_obs);
         bool solveCholmodGN( int* Ap, int* Aii, bool init, bool ordering, int m_ncams, int nnz);
-        void constructCSSGN( int* Si, int* Sp, double* Sx, double* S, sba_crsm& Sidxij, bool init, char* m_smask, int m_ncams);
+        void constructCSSGN( int* Si, int* Sp, double* Sx, double* S, OptimizerWithoutMiddlePoint_sba_crsm& Sidxij, bool init, char* m_smask, int m_ncams);
         void constructAuxCSSGN( int *Ap, int *Aii, char* m_smask, int m_ncams);
-        void compute_reprojection_jacobian(double *V, double *g, double *error, double *obs, double *xyz, int *faces, Eigen::Matrix3d K, int num_obs, sba_crsm& Sidxij);
-        void storeInV(double* V, int idx1, int idx2, double* J1, double* J2, sba_crsm& Uidxij);
-        void storeInV(double* V, int idx, double* J, sba_crsm& Uidxij);
+        void compute_reprojection_jacobian(double *V, double *g, double *error, double *obs, double *xyz, int *faces, Eigen::Matrix3d K, int num_obs, OptimizerWithoutMiddlePoint_sba_crsm& Sidxij);
+        void storeInV(double* V, int idx1, int idx2, double* J1, double* J2, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij);
+        void storeInV(double* V, int idx, double* J, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij);
         void storeInG(double *g, double *J, double *e);
         void storeInG_distance(double *g, double *J, double *e);
         void compute_distance_error(double *error, double *xyz, double *ref,int *faces, int number_faces, int offset);
-        void compute_distance_jacobian(double *V, double *g, double *error, double *xyz, int *faces, int num_faces, int offset, sba_crsm& Uidxij);
-        void storeInV_distance(double* V, int idx, double* J, sba_crsm& Uidxij);
-        void storeInV_distance(double* V, int idx1, int idx2, double* J1, double* J2, sba_crsm& Uidxij);
+        void compute_distance_jacobian(double *V, double *g, double *error, double *xyz, int *faces, int num_faces, int offset, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij);
+        void storeInV_distance(double* V, int idx, double* J, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij);
+        void storeInV_distance(double* V, int idx1, int idx2, double* J1, double* J2, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij);
 
 
         int max_iteration_ = 10;
@@ -55,7 +55,7 @@ class Optimizer {
         cholmod_factor *m_cholFactorS; 
         cholmod_common m_cS; 
         cholmod_dense  *m_cholSparseR, *m_cholSparseE;
-        struct sba_crsm Sidxij;
+        struct OptimizerWithoutMiddlePoint_sba_crsm Sidxij;
 
         std::vector<Eigen::Vector3d> e_vertices_;
         std::vector<Eigen::Vector3d> e_reference_;
@@ -93,18 +93,18 @@ class Optimizer {
 
 };
 
-Optimizer::Optimizer(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, bool verbose) : verbose_(verbose), max_iteration_(max_iteration), e_vertices_(vertices), e_triangles_(triangles) {
+OptimizerWithoutMiddlePoint::OptimizerWithoutMiddlePoint(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, bool verbose) : max_iteration_(max_iteration), e_vertices_(vertices), e_triangles_(triangles), verbose_(verbose) {
     // create reference
     for(int i=0; i< e_vertices_.size(); i++)
         e_reference_.push_back(e_vertices_[i]);
 }
 
-void Optimizer::getVertices(std::vector<Eigen::Vector3d> &vertices) {
+void OptimizerWithoutMiddlePoint::getVertices(std::vector<Eigen::Vector3d> &vertices) {
     vertices = e_vertices_;
 }
 
 
-void Optimizer::run() {
+void OptimizerWithoutMiddlePoint::run() {
 
     Eigen::Matrix3d K;
     K <<    391.656525, 0.000000, 165.964371,
@@ -145,7 +145,6 @@ void Optimizer::run() {
     //     double random_value = dis(gen);
     //     vertices[i] += random_value*mult; 
     // }
-
     std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
     for(int iter = 1; iter < max_iteration_;iter++) {
         start = std::chrono::high_resolution_clock::now();
@@ -206,11 +205,9 @@ void Optimizer::run() {
             ed /= num_faces*3;
             
             cost /= ((num_obs*2) + (num_faces*3));
-
             end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> duration = end-start;
-
-            if (verbose_)
+            if(verbose_)
                 std::cout << "Itertation: " << iter <<" Error: " << sqrt(cost) << " dx: " << dx / num_points <<" er: " << er << " ed: " << ed << " Time: " << duration.count() << std::endl;
 
             // if((cost < 0.000001) || (dx < 0.000001))
@@ -240,7 +237,7 @@ void Optimizer::run() {
     //     if(e_vertices_[i].x() == e_reference_)
     // }
     
-    sba_crsm_free(&Sidxij);
+    OptimizerWithoutMiddlePoint_sba_crsm_free(&Sidxij);
 
 	cholmod_free_factor(&m_cholFactorS, &m_cS);              
 	cholmod_l_free_dense(&m_cholSparseE, &m_cS);
@@ -271,7 +268,7 @@ void Optimizer::run() {
     
 }
 
-void Optimizer::initialize() {
+void OptimizerWithoutMiddlePoint::initialize() {
     
     for(auto& unordered_map: triangle_unordered_mapping_) {
         Eigen::Vector3i triangle = e_triangles_[unordered_map.first];
@@ -364,7 +361,7 @@ void Optimizer::initialize() {
     // ordering_ = true;
 }
 
-void Optimizer::setParamater(double *observation, std::unordered_map<int,int> &unordered_mapping_vertices, std::unordered_map<int,int> &unordered_mapping_triangles, int number_vertices, int number_triangles, int number_observation) {
+void OptimizerWithoutMiddlePoint::setParamater(double *observation, std::unordered_map<int,int> &unordered_mapping_vertices, std::unordered_map<int,int> &unordered_mapping_triangles, int number_vertices, int number_triangles, int number_observation) {
     observation_ = observation;
     vertices_unordered_mapping_ = unordered_mapping_vertices;
     triangle_unordered_mapping_ = unordered_mapping_triangles;
@@ -373,7 +370,7 @@ void Optimizer::setParamater(double *observation, std::unordered_map<int,int> &u
     number_observation_ = number_observation;
 }
 
-void Optimizer::compute_reprojection_error(double *e, double *obs, double *xyz, int *faces, Eigen::Matrix3d &K, int num_obs) {
+void OptimizerWithoutMiddlePoint::compute_reprojection_error(double *e, double *obs, double *xyz, int *faces, Eigen::Matrix3d &K, int num_obs) {
     for(int obs_id=0; obs_id < num_obs; obs_id++) {
         double fx = K(0,0);
         double fy = K(1,1);
@@ -416,9 +413,16 @@ void Optimizer::compute_reprojection_error(double *e, double *obs, double *xyz, 
         double b = fy * p[1] / p[2] + cy;
         double e_u = z_u - (fx * p[0] / p[2] + cx);
         double e_v = z_v - (fy * p[1] / p[2] + cy);
+
+        if((alpha == 1) || (beta == 1) || (gamma == 1)){
+            e[obs_id*2 + 0] = e_u;
+            e[obs_id*2 + 1] = e_v;
+        }else {
+            e[obs_id*2 + 0] = 0;
+            e[obs_id*2 + 1] = 0;
+        }
         
-        e[obs_id*2 + 0] = e_u;
-        e[obs_id*2 + 1] = e_v;
+        
 
 
 
@@ -442,7 +446,7 @@ void Optimizer::compute_reprojection_error(double *e, double *obs, double *xyz, 
     // exit(1);
 }
 
-void Optimizer::sba_crsm_alloc(struct sba_crsm *sm, int nr, int nc, int nnz)
+void OptimizerWithoutMiddlePoint::OptimizerWithoutMiddlePoint_sba_crsm_alloc(struct OptimizerWithoutMiddlePoint_sba_crsm *sm, int nr, int nc, int nnz)
 {
 	int msz;
 	sm->nr=nr;
@@ -451,14 +455,14 @@ void Optimizer::sba_crsm_alloc(struct sba_crsm *sm, int nr, int nc, int nnz)
 	msz=2*nnz+nr+1;
 	sm->val=(int *)malloc(msz*sizeof(int));  /* required memory is allocated in a single step */
 	if(!sm->val){
-		fprintf(stderr, "memory allocation request failed in sba_crsm_alloc() [nr=%d, nc=%d, nnz=%d]\n", nr, nc, nnz);
+		fprintf(stderr, "memory allocation request failed in OptimizerWithoutMiddlePoint_sba_crsm_alloc() [nr=%d, nc=%d, nnz=%d]\n", nr, nc, nnz);
 		exit(1);
 	}
 	sm->colidx=sm->val+nnz;
 	sm->rowptr=sm->colidx+nnz;
 }
 
-void Optimizer::sba_crsm_free(struct sba_crsm *sm)
+void OptimizerWithoutMiddlePoint::OptimizerWithoutMiddlePoint_sba_crsm_free(struct OptimizerWithoutMiddlePoint_sba_crsm *sm)
 {
 	 sm->nr=sm->nc=sm->nnz=-1;
 	free(sm->val);
@@ -466,7 +470,7 @@ void Optimizer::sba_crsm_free(struct sba_crsm *sm)
 }
 
 /* returns the index of the (i, j) element. No bounds checking! */ // from PBA
-int Optimizer::sba_crsm_elmidx(struct sba_crsm *sm, int i, int j)
+int OptimizerWithoutMiddlePoint::OptimizerWithoutMiddlePoint_sba_crsm_elmidx(struct OptimizerWithoutMiddlePoint_sba_crsm *sm, int i, int j)
 {
 	int low, high, mid, diff;
 
@@ -489,7 +493,7 @@ int Optimizer::sba_crsm_elmidx(struct sba_crsm *sm, int i, int j)
 	return -1; /* not found */
 }
 
-void Optimizer::constructSmask( sba_crsm& Sidxij, int m, int& m_nS, char* m_smask)//, sba_crsm& Uidxij, char* m_umask)
+void OptimizerWithoutMiddlePoint::constructSmask( OptimizerWithoutMiddlePoint_sba_crsm& Sidxij, int m, int& m_nS, char* m_smask)//, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij, char* m_umask)
 {
 	int i, j, k, ii, jj;
     for ( i = 0; i < m*m; i++ )
@@ -501,7 +505,7 @@ void Optimizer::constructSmask( sba_crsm& Sidxij, int m, int& m_nS, char* m_smas
 			m_nS += 1;
 		}
 	}	
-	sba_crsm_alloc(&Sidxij, m, m, m_nS);
+	OptimizerWithoutMiddlePoint_sba_crsm_alloc(&Sidxij, m, m, m_nS);
 	for(i=k=0; i<m; ++i)
 	{
 		Sidxij.rowptr[i]=k;
@@ -522,14 +526,14 @@ void Optimizer::constructSmask( sba_crsm& Sidxij, int m, int& m_nS, char* m_smas
 
 
 
-void Optimizer::storeInG_distance(double *g, double *J, double *e) {
+void OptimizerWithoutMiddlePoint::storeInG_distance(double *g, double *J, double *e) {
     g[0] += -J[0]*e[0];
     g[1] += -J[1]*e[0];
     g[2] += -J[2]*e[0];
 
 }
 
-void Optimizer::storeInV_distance(double* V, int idx1, int idx2, double* J1, double* J2, sba_crsm& Uidxij) {
+void OptimizerWithoutMiddlePoint::storeInV_distance(double* V, int idx1, int idx2, double* J1, double* J2, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij) {
     int pos;
     double* ppUpa;
     double *JJ1, *JJ2;
@@ -537,11 +541,11 @@ void Optimizer::storeInV_distance(double* V, int idx1, int idx2, double* J1, dou
     if (idx1 < idx2) {
         JJ1 = J1;
         JJ2 = J2;
-        pos = sba_crsm_elmidx( &Uidxij, idx1, idx2);
+        pos = OptimizerWithoutMiddlePoint_sba_crsm_elmidx( &Uidxij, idx1, idx2);
     } else {
         JJ1 = J2;
         JJ2 = J1;
-        pos = sba_crsm_elmidx( &Uidxij, idx2, idx1); 
+        pos = OptimizerWithoutMiddlePoint_sba_crsm_elmidx( &Uidxij, idx2, idx1); 
     }
 
     if(pos == -1) {
@@ -560,11 +564,11 @@ void Optimizer::storeInV_distance(double* V, int idx1, int idx2, double* J1, dou
     
 }
 
-void Optimizer::storeInV_distance(double* V, int idx, double* J, sba_crsm& Uidxij) {
+void OptimizerWithoutMiddlePoint::storeInV_distance(double* V, int idx, double* J, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij) {
     int pos;
     double* ppUpa;
     double sum=0;	
-    pos = sba_crsm_elmidx( &Uidxij, idx, idx);
+    pos = OptimizerWithoutMiddlePoint_sba_crsm_elmidx( &Uidxij, idx, idx);
 
     if(pos == -1) {
         std::cerr << "Pos -1 in StoreInV" << std::endl; 
@@ -580,7 +584,7 @@ void Optimizer::storeInV_distance(double* V, int idx, double* J, sba_crsm& Uidxi
     ppUpa[8] += J[2] * J[2];
 }
 
-void Optimizer::compute_distance_jacobian(double *V, double *g, double *error, double *xyz, int *faces, int num_faces, int offset, sba_crsm& Uidxij) {
+void OptimizerWithoutMiddlePoint::compute_distance_jacobian(double *V, double *g, double *error, double *xyz, int *faces, int num_faces, int offset, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij) {
     int counter = 0;
     for(int i=0;i < num_faces; i++) {
         
@@ -655,7 +659,7 @@ void Optimizer::compute_distance_jacobian(double *V, double *g, double *error, d
 }
 
 
-void Optimizer::compute_distance_error(double *error, double *xyz, double *ref,int *faces, int number_faces, int offset) {
+void OptimizerWithoutMiddlePoint::compute_distance_error(double *error, double *xyz, double *ref,int *faces, int number_faces, int offset) {
     int counter = 0;
     for(int i=0;i<number_faces; i++) {
         
@@ -693,7 +697,7 @@ void Optimizer::compute_distance_error(double *error, double *xyz, double *ref,i
     }
 }
 
-void Optimizer::storeInG(double *g, double *J, double *e) {
+void OptimizerWithoutMiddlePoint::storeInG(double *g, double *J, double *e) {
     g[0] += -(J[0] * e[0] + J[3] * e[1]);
     g[1] += -(J[1] * e[0] + J[4] * e[1]);
     g[2] += -(J[2] * e[0] + J[5] * e[1]);
@@ -701,11 +705,11 @@ void Optimizer::storeInG(double *g, double *J, double *e) {
     // cout << "" <<endl;
 }
 
-void Optimizer::storeInV(double* V, int idx, double* J, sba_crsm& Uidxij) {
+void OptimizerWithoutMiddlePoint::storeInV(double* V, int idx, double* J, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij) {
     int pos;
     double* ppUpa;
     double sum=0;	
-    pos = sba_crsm_elmidx( &Uidxij, idx, idx);
+    pos = OptimizerWithoutMiddlePoint_sba_crsm_elmidx( &Uidxij, idx, idx);
     
     if(pos == -1) {
         std::cerr << "Pos -1 in StoreInV" << std::endl; 
@@ -729,7 +733,7 @@ void Optimizer::storeInV(double* V, int idx, double* J, sba_crsm& Uidxij) {
     // exit(1);
 }
 
-void Optimizer::storeInV(double* V, int idx1, int idx2, double* J1, double* J2, sba_crsm& Uidxij) {
+void OptimizerWithoutMiddlePoint::storeInV(double* V, int idx1, int idx2, double* J1, double* J2, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij) {
     int pos;
     double* ppUpa;
     double *JJ1, *JJ2;
@@ -737,11 +741,11 @@ void Optimizer::storeInV(double* V, int idx1, int idx2, double* J1, double* J2, 
     if (idx1 < idx2) {
         JJ1 = J1;
         JJ2 = J2;
-        pos = sba_crsm_elmidx( &Uidxij, idx1, idx2);
+        pos = OptimizerWithoutMiddlePoint_sba_crsm_elmidx( &Uidxij, idx1, idx2);
     } else {
         JJ1 = J2;
         JJ2 = J1;
-        pos = sba_crsm_elmidx( &Uidxij, idx2, idx1); 
+        pos = OptimizerWithoutMiddlePoint_sba_crsm_elmidx( &Uidxij, idx2, idx1); 
     }
     if(pos == -1) {
         std::cerr << "Pos -1 in StoreInV" << std::endl; 
@@ -758,7 +762,7 @@ void Optimizer::storeInV(double* V, int idx1, int idx2, double* J1, double* J2, 
     }
 }
 
-void Optimizer::compute_reprojection_jacobian(double *V, double *g, double *error, double *obs, double *xyz, int *faces, Eigen::Matrix3d K, int num_obs, sba_crsm& Sidxij) {
+void OptimizerWithoutMiddlePoint::compute_reprojection_jacobian(double *V, double *g, double *error, double *obs, double *xyz, int *faces, Eigen::Matrix3d K, int num_obs, OptimizerWithoutMiddlePoint_sba_crsm& Sidxij) {
     for(int obs_id=0; obs_id < num_obs; obs_id++) {
         double fx = K(0,0);
         double fy = K(1,1);
@@ -778,6 +782,9 @@ void Optimizer::compute_reprojection_jacobian(double *V, double *g, double *erro
         double alpha = obs[obs_id * 6 + 3];
         double beta = obs[obs_id * 6 + 4];
         double gamma = obs[obs_id * 6 + 5];
+
+        if ((alpha != 1) && (beta != 1) && (gamma != 1))
+            continue;
 
         double x = v1[0] * alpha + v2[0]*beta + v3[0]*gamma;
         double y = v1[1] * alpha + v2[1]*beta + v3[1]*gamma;
@@ -826,7 +833,7 @@ void Optimizer::compute_reprojection_jacobian(double *V, double *g, double *erro
     }
 }
 
-void Optimizer::constructAuxCSSGN( int *Ap, int *Aii, char* m_smask, int m_ncams)
+void OptimizerWithoutMiddlePoint::constructAuxCSSGN( int *Ap, int *Aii, char* m_smask, int m_ncams)
 {
 	int* Cp = Ap;
 	int* Ci = Aii;
@@ -848,7 +855,7 @@ void Optimizer::constructAuxCSSGN( int *Ap, int *Aii, char* m_smask, int m_ncams
 	*Cp=nZ;
 }
 
-void Optimizer::constructCSSGN( int* Si, int* Sp, double* Sx, double* S, sba_crsm& Sidxij, bool init, char* m_smask, int m_ncams)
+void OptimizerWithoutMiddlePoint::constructCSSGN( int* Si, int* Sp, double* Sx, double* S, OptimizerWithoutMiddlePoint_sba_crsm& Sidxij, bool init, char* m_smask, int m_ncams)
 {
 	int ii, jj, jjj, k;
 	int pos1, m = m_ncams;
@@ -873,7 +880,7 @@ void Optimizer::constructCSSGN( int* Si, int* Sp, double* Sx, double* S, sba_crs
 					if ((m_smask[jj*m+ii]==1))
 					{   
 
-						pos1 = sba_crsm_elmidx( &Sidxij, jj, ii );
+						pos1 = OptimizerWithoutMiddlePoint_sba_crsm_elmidx( &Sidxij, jj, ii );
 						ptr5 = S + pos1*9;
 						
 						if( ii == jj )
@@ -933,7 +940,7 @@ void Optimizer::constructCSSGN( int* Si, int* Sp, double* Sx, double* S, sba_crs
 				{
 					if ((m_smask[jj*m+ii]==1))
 					{
-						pos1 = sba_crsm_elmidx( &Sidxij, jj, ii );
+						pos1 = OptimizerWithoutMiddlePoint_sba_crsm_elmidx( &Sidxij, jj, ii );
 						ptr5 = S + pos1*9;
 
 						if( ii == jj )
@@ -959,7 +966,7 @@ void Optimizer::constructCSSGN( int* Si, int* Sp, double* Sx, double* S, sba_crs
 	}
 }
 
-bool Optimizer::solveCholmodGN( int* Ap1, int* Aii1, bool init, bool ordering, int m_ncams, int nnz1)
+bool OptimizerWithoutMiddlePoint::solveCholmodGN( int* Ap1, int* Aii1, bool init, bool ordering, int m_ncams, int nnz1)
 {
 	int i, j;
 	int m = m_ncams;

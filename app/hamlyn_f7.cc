@@ -21,31 +21,31 @@
 //     return ref_node[key] ? ref_node[key] : YAML::Node();
 // }
 
-void visualizer_mesh(std::shared_ptr<open3d::geometry::TriangleMesh> &mesh) {
-    open3d::visualization::Visualizer visualizer;
-    Eigen::Vector3d color(0.15, 0.15, 0.15); 
-    auto lines = std::make_shared<open3d::geometry::LineSet>();
-    for (const auto& triangle : mesh->triangles_) {
-        lines->lines_.push_back({triangle(0), triangle(1)});
-        lines->lines_.push_back({triangle(1), triangle(2)});
-        lines->lines_.push_back({triangle(2), triangle(0)});
+// void visualizer_mesh(std::shared_ptr<open3d::geometry::TriangleMesh> &mesh) {
+//     open3d::visualization::Visualizer visualizer;
+//     Eigen::Vector3d color(0.15, 0.15, 0.15); 
+//     auto lines = std::make_shared<open3d::geometry::LineSet>();
+//     for (const auto& triangle : mesh->triangles_) {
+//         lines->lines_.push_back({triangle(0), triangle(1)});
+//         lines->lines_.push_back({triangle(1), triangle(2)});
+//         lines->lines_.push_back({triangle(2), triangle(0)});
 
-        lines->colors_.push_back(color); lines->colors_.push_back(color); lines->colors_.push_back(color); 
-    }
-    lines->points_ = mesh->vertices_;
-    visualizer.CreateVisualizerWindow("Mesh Visualisierung", 1600, 900);  
-    visualizer.AddGeometry(mesh);
-    visualizer.AddGeometry(lines);
+//         lines->colors_.push_back(color); lines->colors_.push_back(color); lines->colors_.push_back(color); 
+//     }
+//     lines->points_ = mesh->vertices_;
+//     visualizer.CreateVisualizerWindow("Mesh Visualisierung", 1600, 900);  
+//     visualizer.AddGeometry(mesh);
+//     visualizer.AddGeometry(lines);
 
-    open3d::visualization::ViewControl &view_control = visualizer.GetViewControl();
-    view_control.SetLookat({10.0, 0.0, 120.0}); // Setze den Startpunkt der Kamera auf (0, 0, 0)
-    view_control.SetFront({0.1, 0.0, -1.0});
+//     open3d::visualization::ViewControl &view_control = visualizer.GetViewControl();
+//     view_control.SetLookat({10.0, 0.0, 120.0}); // Setze den Startpunkt der Kamera auf (0, 0, 0)
+//     view_control.SetFront({0.1, 0.0, -1.0});
 
     
 
-    visualizer.Run();
+//     visualizer.Run();
 
-}
+// }
 
 void compareWithGroundTruth(open3d::geometry::TriangleMesh mesh, cv::Mat &output, int FrameNo) {
     // static int FrameNo = 0;
@@ -107,7 +107,8 @@ int main() {
     int max_iteration = config["Optimizer"]["max_iteration"].as<int>();
     int thresholdValue = config["Preprocessing"]["brightness_threshold"].as<int>();
     int optimization_algorithm = config["System"]["optimization_algorithm"].as<int>();
-    
+    bool verbose = config["System"]["verbose"].as<bool>();
+
     // open3d::visualization::ViewControl &view_control = visualizer.GetViewControl();
     // view_control.SetLookat({10.0, 0.0, 120.0}); // Setze den Startpunkt der Kamera auf (0, 0, 0)
     // view_control.SetFront({0.1, 0.0, -1.0});
@@ -135,7 +136,7 @@ int main() {
   
     std::vector<double> inital_obs;
     Tracking *tracking = new Tracking(frame, K, vertices, triangles, thresholdValue);
-    MeshMap *map = new MeshMap(vertices, triangles, K, max_iteration, optimization_algorithm);
+    MeshMap *map = new MeshMap(vertices, triangles, K, max_iteration, optimization_algorithm, verbose);
     
     tracking->setunordered_mapping(map); // obs_set in here!
     map->setTracking(tracking);
@@ -161,11 +162,11 @@ int main() {
         mesh->vertices_ = map->getVertices();
         mesh->triangles_ = map->getTriangles();
         
-    //     cv::Mat error_map;
-    //     compareWithGroundTruth(*mesh, error_map, FrameNo);
-    //     FrameNo++;
-    //     cv::imshow("sad", frame);
-    // cv::waitKey(0);
+        // cv::Mat error_map;
+        // compareWithGroundTruth(*mesh, error_map, FrameNo);
+        // FrameNo++;
+        // cv::imshow("sad", frame);
+        // cv::waitKey(0);
     
         // visualize->UpdateMesh(error_map, mesh);
         frame.convertTo(frame, -1, 1, 50);

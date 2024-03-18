@@ -7,6 +7,7 @@
 
 #include <random>
 #include <opencv2/opencv.hpp>
+#include <chrono>
 
 struct distance_sba_crsm	
 {
@@ -19,7 +20,7 @@ struct distance_sba_crsm
 
 class OptimizerDistanceOnly {
     public:
-        OptimizerDistanceOnly(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K);
+        OptimizerDistanceOnly(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K, bool verbose);
 
         void setParamater(double *observation, std::unordered_map<int,int> &unordered_mapping_vertices, std::unordered_map<int,int> &unordered_mapping_triangles, int number_vertices, int number_triangles, int number_observation);
         void initialize();
@@ -47,6 +48,7 @@ class OptimizerDistanceOnly {
 
 
         int max_iteration_ = 10;
+        bool verbose_ = false;
 
         //Solve Sparse Matrix using CHOLMOD (http://www.cise.ufl.edu/research/sparse/SuiteSparse/) 
         cholmod_sparse *m_cholSparseS;				
@@ -93,7 +95,7 @@ class OptimizerDistanceOnly {
 
 };
 
-OptimizerDistanceOnly::OptimizerDistanceOnly(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K) : K_(K), max_iteration_(max_iteration), e_vertices_(vertices), e_triangles_(triangles) {
+OptimizerDistanceOnly::OptimizerDistanceOnly(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K, bool verbose) : verbose_(verbose), K_(K), max_iteration_(max_iteration), e_vertices_(vertices), e_triangles_(triangles) {
     // create reference
     for(int i=0; i< e_vertices_.size(); i++)
         e_reference_.push_back(e_vertices_[i]);
@@ -158,7 +160,9 @@ void OptimizerDistanceOnly::run() {
     //     vertices[i*3+2] += random_value*mult; 
     // }
 
+    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
     for(int iter = 1; iter < max_iteration_;iter++) {
+        start = std::chrono::high_resolution_clock::now();
         memset( error_, 0, (( (num_faces*3))*sizeof(double) ));
         memset( V_, 0, nnz  * sizeof(double));
         memset( g_, 0, num_points * sizeof(double));
@@ -203,12 +207,16 @@ void OptimizerDistanceOnly::run() {
 
 
 
-                d += update;
 
+                d += update;
+            
 
 
                 if( d < 0) {
-                    std::abs(d);
+                    // std::cout << d << std::endl;
+                    d = std::abs(d);
+                    // std::cout << d << std::endl;
+
                 }
                 vertices[i*3+2] = d;
 
@@ -233,12 +241,18 @@ void OptimizerDistanceOnly::run() {
             cost /= ((num_faces*3));
             // std::cout << "Itertation: " << iter <<" Error: " << sqrt(cost) << " dx: " << 0 << " ed: " << ed << std::endl;
 
-            std::cout << "Itertation: " << iter <<" Error: " << sqrt(cost) << " dx: " << dx / num_points << " ed: " << ed << std::endl;
+            end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> duration = end-start;
+
+            if (verbose_)
+                std::cout << "Itertation: " << iter <<" Error: " << sqrt(cost) << " dx: " << dx / num_points << " ed: " << ed << " Time: " << duration.count() << std::endl;
 
             // if((cost < 0.000001) || (dx < 0.000001))
             //     break;
-            if((cost < 0.00000000001) || (dx < 0.00000000001))
+            if((cost < 0.00000000001) || (dx < 0.00000000001)){
+                cv::waitKey(0);
                 break;
+            }
     }
 
 
