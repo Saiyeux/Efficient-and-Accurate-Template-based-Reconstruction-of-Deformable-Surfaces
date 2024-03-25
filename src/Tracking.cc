@@ -1,9 +1,9 @@
 #include "Tracking.h"
-#include "Extractor.h"
+#include "data/Extractor.h"
 #include "MeshMap.h"
 #include <iostream>
 #include <algorithm>
-#include<fstream>
+#include <fstream>
 
 Tracking::Tracking(cv::Mat &frame, Eigen::Matrix3d K, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, int thresholdValue) :  K_(K), fx_(K(0,0)), fy_(K(1,1)), cx_(K(0,2)), cy_(K(1,2)), pre_frame_(frame),
     vertices_(vertices), triangles_(triangles), number_triangles_(triangles_.size()), number_vertices_(vertices_.size())

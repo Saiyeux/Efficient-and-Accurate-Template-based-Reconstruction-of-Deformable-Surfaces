@@ -1,12 +1,8 @@
 add_library(${PROJECT_NAME}
             # ${CMAKE_CURRENT_SOURCE_DIR}/config.h
+            System.cc System.h
             Tracking.cc Tracking.h
-            MeshMap.cc MeshMap.h
-            Mesh_Visualizer.cc Mesh_Visualizer.h
-            Extractor.cc Extractor.h
-            Optimizer.cc Optimizer.h
-            OptimizerWithoutMiddlePoint.cc OptimizerWithoutMiddlePoint.h
-            OptimizerDistanceOnly.cc OptimizerDistanceOnly.h)
+            MeshMap.cc MeshMap.h)
 
 # Set output directory of the library
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -52,3 +48,7 @@ install(TARGETS ${PROJECT_NAME}
 file(GLOB HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 install(FILES ${HEADERS}
         DESTINATION ${STBR_INCLUDE_INSTALL_DIR})
+
+add_subdirectory(optimize)
+add_subdirectory(viewer)
+add_subdirectory(data)

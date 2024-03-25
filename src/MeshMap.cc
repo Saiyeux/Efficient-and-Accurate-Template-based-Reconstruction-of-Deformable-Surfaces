@@ -1,8 +1,8 @@
 #include "MeshMap.h"
 #include "Tracking.h"
-#include "Optimizer.h"
-#include "OptimizerWithoutMiddlePoint.h"
-#include "OptimizerDistanceOnly.h"
+#include "optimize/Optimizer.h"
+#include "optimize/OptimizerWithoutMiddlePoint.h"
+#include "optimize/OptimizerDistanceOnly.h"
 
 
 
