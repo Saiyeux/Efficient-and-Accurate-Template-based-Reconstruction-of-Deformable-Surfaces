@@ -15,11 +15,16 @@ foreach(EXECUTABLE_TARGET IN LISTS EXECUTABLE_TARGETS)
 
 
 
-    # Link OpenVSLAM
+    # Link Executable
     target_link_libraries(${EXECUTABLE_TARGET}
                           PRIVATE
                           ${PROJECT_NAME}
                           ${OpenCV_LIBS}
+                          opencv_imgcodecs
+                                opencv_videoio
+                                opencv_core
+                                opencv_features2d
+                                opencv_calib3d
                           Open3D::Open3D
                           yaml-cpp
                           opencv_imgcodecs

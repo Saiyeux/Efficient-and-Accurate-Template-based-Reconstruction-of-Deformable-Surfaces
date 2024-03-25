@@ -414,7 +414,7 @@ void OptimizerWithoutMiddlePoint::compute_reprojection_error(double *e, double *
         double e_u = z_u - (fx * p[0] / p[2] + cx);
         double e_v = z_v - (fy * p[1] / p[2] + cy);
 
-        if((alpha == 1) || (beta == 1) || (gamma == 1)){
+        if((alpha >= 0.99) || (beta >= 0.99) || (gamma >= 0.99)){
             e[obs_id*2 + 0] = e_u;
             e[obs_id*2 + 1] = e_v;
         }else {
@@ -783,7 +783,7 @@ void OptimizerWithoutMiddlePoint::compute_reprojection_jacobian(double *V, doubl
         double beta = obs[obs_id * 6 + 4];
         double gamma = obs[obs_id * 6 + 5];
 
-        if ((alpha != 1) && (beta != 1) && (gamma != 1))
+        if ((alpha < 0.99) && (beta < 0.99) && (gamma < 0.99))
             continue;
 
         double x = v1[0] * alpha + v2[0]*beta + v3[0]*gamma;

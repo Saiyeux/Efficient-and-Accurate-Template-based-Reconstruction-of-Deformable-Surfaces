@@ -161,6 +161,7 @@ void OptimizerDistanceOnly::run() {
     // }
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+    double ed = 0;
     for(int iter = 1; iter < max_iteration_;iter++) {
         start = std::chrono::high_resolution_clock::now();
         memset( error_, 0, (( (num_faces*3))*sizeof(double) ));
@@ -232,7 +233,7 @@ void OptimizerDistanceOnly::run() {
             //     er += error_[i] * error_[i];
             // }
             // er /= num_obs*2;
-            double ed = 0;
+            ed = 0;
             for(int i=0; i < ((num_faces*3)); i++) {
                 ed += error_[i] * error_[i];
             }
@@ -250,16 +251,47 @@ void OptimizerDistanceOnly::run() {
             // if((cost < 0.000001) || (dx < 0.000001))
             //     break;
             if((cost < 0.00000000001) || (dx < 0.00000000001)){
-                cv::waitKey(0);
+                // cv::waitKey(0);
                 break;
             }
     }
 
+    // if (ed > 100000){
+    //     for(int i = 0; i < num_points; i++) {
+    //         double psi = vertices[i*3];
+    //         double theta = vertices[i*3+1];
+    //         double d = vertices[i*3+2];
+
+    //         vertices_[i*3] = std::sin(psi) * std::cos(theta) * d;
+    //         vertices_[i*3+1] = std::sin(theta) * d;
+    //         vertices_[i*3+2] = std::cos(psi) * std::cos(theta) * d;
+            
+    //     }
+
+        
+    //     for(auto map1 : triangle_unordered_mapping_) {
+    //         Eigen::Vector3i e_triangle = e_triangles_[map1.first];
+    //         int *triangle = &triangles_[map1.second * 3]; 
+        
+    //         e_vertices_[e_triangle.x()].x() = vertices_[triangle[0]*3];
+    //         e_vertices_[e_triangle.x()].y() = vertices_[triangle[0]*3+1];
+    //         e_vertices_[e_triangle.x()].z() = vertices_[triangle[0]*3+2];
+
+    //         e_vertices_[e_triangle.y()].x() = vertices_[triangle[1]*3];
+    //         e_vertices_[e_triangle.y()].y() = vertices_[triangle[1]*3+1];
+    //         e_vertices_[e_triangle.y()].z() = vertices_[triangle[1]*3+2];
+
+    //         e_vertices_[e_triangle.z()].x() = vertices_[triangle[2]*3];
+    //         e_vertices_[e_triangle.z()].y() = vertices_[triangle[2]*3+1];
+    //         e_vertices_[e_triangle.z()].z() = vertices_[triangle[2]*3+2];
+    //     }
+    // }
+
 
     for(int i = 0; i < num_points; i++) {
-        double psi = vertices_[i*3];
-        double theta = vertices_[i*3+1];
-        double d = vertices_[i*3+2];
+        double psi = vertices[i*3];
+        double theta = vertices[i*3+1];
+        double d = vertices[i*3+2];
 
         vertices_[i*3] = std::sin(psi) * std::cos(theta) * d;
         vertices_[i*3+1] = std::sin(theta) * d;

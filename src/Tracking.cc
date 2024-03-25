@@ -174,7 +174,7 @@ static int FrameNo = 0;
     // }
     // file.close();
     
-    std::string file_path = "obs_test/obs_"+ std::to_string(FrameNo) +".txt";
+    std::string file_path = "obs_test3/obs_"+ std::to_string(FrameNo) +".txt";
     std::ifstream obj_file(file_path);
     if (!obj_file.is_open()) {
         std::cerr << "Incorrect path to the Obj-file." << std::endl;
@@ -217,7 +217,7 @@ void Tracking::track(cv::Mat &frame, std::vector<cv::Point2f> &pixel) {
     
     
     // static int FrameNo = 0;
-    // std::ofstream file("obs_test/obs_" + std::to_string(FrameNo) + ".txt");
+    // std::ofstream file("obs_test3/obs_" + std::to_string(FrameNo) + ".txt");
     // FrameNo++;
     // for(int i=0; i < obs.size()/6; i++) {
     //     file <<  std::setprecision(20) << std::fixed <<  obs[i*6] << " " << obs[i*6+1] << " " << obs[i*6+2] << " " << obs[i*6+3] << " " << obs[i*6+4] << " " << obs[i*6+5] << std::endl;
