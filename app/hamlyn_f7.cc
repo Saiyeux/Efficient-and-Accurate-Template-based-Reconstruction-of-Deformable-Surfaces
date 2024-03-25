@@ -1,6 +1,7 @@
 #include "MeshMap.h"
 #include "Tracking.h"
-#include "Mesh_Visualizer.h"
+#include "viewer/Mesh_Visualizer.h"
+#include "System.h"
 
 #include <opencv2/opencv.hpp>
 #include <open3d/Open3D.h>
@@ -14,38 +15,6 @@
 
 // tmp
 #include<fstream>
-// //! YAML node
-//     const YAML::Node yaml_node_;
-
-// inline YAML::Node yaml_optional_ref(const YAML::Node& ref_node, const std::string& key) {
-//     return ref_node[key] ? ref_node[key] : YAML::Node();
-// }
-
-// void visualizer_mesh(std::shared_ptr<open3d::geometry::TriangleMesh> &mesh) {
-//     open3d::visualization::Visualizer visualizer;
-//     Eigen::Vector3d color(0.15, 0.15, 0.15); 
-//     auto lines = std::make_shared<open3d::geometry::LineSet>();
-//     for (const auto& triangle : mesh->triangles_) {
-//         lines->lines_.push_back({triangle(0), triangle(1)});
-//         lines->lines_.push_back({triangle(1), triangle(2)});
-//         lines->lines_.push_back({triangle(2), triangle(0)});
-
-//         lines->colors_.push_back(color); lines->colors_.push_back(color); lines->colors_.push_back(color); 
-//     }
-//     lines->points_ = mesh->vertices_;
-//     visualizer.CreateVisualizerWindow("Mesh Visualisierung", 1600, 900);  
-//     visualizer.AddGeometry(mesh);
-//     visualizer.AddGeometry(lines);
-
-//     open3d::visualization::ViewControl &view_control = visualizer.GetViewControl();
-//     view_control.SetLookat({10.0, 0.0, 120.0}); // Setze den Startpunkt der Kamera auf (0, 0, 0)
-//     view_control.SetFront({0.1, 0.0, -1.0});
-
-    
-
-//     visualizer.Run();
-
-// }
 
 void compareWithGroundTruth(open3d::geometry::TriangleMesh mesh, cv::Mat &output, int FrameNo) {
     // static int FrameNo = 0;
@@ -143,7 +112,7 @@ int main() {
     
     std::vector<cv::Point2f> pixel; // mittlerweile unneccesary?
     
-
+    System *sys = new System(triangles, vertices, frame, config);
     
 
     // auto scene = open3d::t::geometry::RaycastingScene() ;
