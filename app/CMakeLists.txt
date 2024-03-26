@@ -1,6 +1,6 @@
 set(EXECUTABLE_TARGETS "")
 
-add_executable(hamlyn_f7 hamlyn_f7.cc)
+add_executable(hamlyn_f7 Phantom7/hamlyn_f7.cc)
 list(APPEND EXECUTABLE_TARGETS hamlyn_f7)
 
 foreach(EXECUTABLE_TARGET IN LISTS EXECUTABLE_TARGETS)

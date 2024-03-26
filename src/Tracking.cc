@@ -178,9 +178,9 @@ void Tracking::draw_correspondence(cv::Mat &frame) {
     }
 }
 
-#include <fstream>
-#include <sstream>
-#include <iostream>
+// #include <fstream>
+// #include <sstream>
+// #include <iostream>
 void Tracking::updateObservation() {
 
     for(int obs_id=0; obs_id < obs.size()/6; obs_id++) {
@@ -191,7 +191,7 @@ void Tracking::updateObservation() {
         obs[obs_id*6+1] = u;
         obs[obs_id*6+2] = v;
     }
-static int FrameNo = 0;
+// static int FrameNo = 0;
     // std::ofstream file("obs_test/obs_" + std::to_string(FrameNo) + ".txt");
     // FrameNo++;
     // for(int i=0; i < obs.size()/6; i++) {
@@ -199,32 +199,32 @@ static int FrameNo = 0;
     // }
     // file.close();
     
-    std::string file_path = "obs_test3/obs_"+ std::to_string(FrameNo) +".txt";
-    std::ifstream obj_file(file_path);
-    if (!obj_file.is_open()) {
-        std::cerr << "Incorrect path to the Obj-file." << std::endl;
-        return;
-    }
-    std::string line;
-    std::vector<double> tmp;
-    while (std::getline(obj_file, line)) {
-        std::stringstream sstream(line);
-        std::string word;
-        sstream >> word;
-        tmp.push_back(std::stod(word));
-        sstream >> word;
-        tmp.push_back(std::stod(word));
-        sstream >> word;
-        tmp.push_back(std::stod(word));
-        sstream >> word;
-        tmp.push_back(std::stod(word));
-        sstream >> word;
-        tmp.push_back(std::stod(word));
-        sstream >> word;
-        tmp.push_back(std::stod(word));
-    }
-    obs = tmp;
-    FrameNo++;
+    // std::string file_path = "obs_test3/obs_"+ std::to_string(FrameNo) +".txt";
+    // std::ifstream obj_file(file_path);
+    // if (!obj_file.is_open()) {
+    //     std::cerr << "Incorrect path to the Obj-file." << std::endl;
+    //     return;
+    // }
+    // std::string line;
+    // std::vector<double> tmp;
+    // while (std::getline(obj_file, line)) {
+    //     std::stringstream sstream(line);
+    //     std::string word;
+    //     sstream >> word;
+    //     tmp.push_back(std::stod(word));
+    //     sstream >> word;
+    //     tmp.push_back(std::stod(word));
+    //     sstream >> word;
+    //     tmp.push_back(std::stod(word));
+    //     sstream >> word;
+    //     tmp.push_back(std::stod(word));
+    //     sstream >> word;
+    //     tmp.push_back(std::stod(word));
+    //     sstream >> word;
+    //     tmp.push_back(std::stod(word));
+    // }
+    // obs = tmp;
+    // FrameNo++;
 }
 
 void Tracking::track(cv::Mat &frame) {

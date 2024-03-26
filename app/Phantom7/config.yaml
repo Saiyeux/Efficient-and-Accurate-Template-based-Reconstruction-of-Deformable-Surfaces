@@ -10,7 +10,7 @@ System:
   verbose: true
 
 Optimizer:
-  max_iteration: 20
+  max_iteration: 5
 
 Image:
   fx: 391.656525
