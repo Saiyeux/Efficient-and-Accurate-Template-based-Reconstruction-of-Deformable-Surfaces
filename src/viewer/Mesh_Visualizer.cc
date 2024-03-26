@@ -5,7 +5,7 @@ Mesh_Visualizer::Mesh_Visualizer(int width, int height, std::vector<Eigen::Vecto
 vertices_(vertices), triangles_(triangles) {
     visualizer.CreateVisualizerWindow("Mesh Visualisierung", width, height);
     // mesh_ = std::make_shared<open3d::geometry::TriangleMesh>(vertices, trian);
-    mesh_ = mesh;
+    mesh_ = std::make_shared<open3d::geometry::TriangleMesh>(*mesh);
     // view_control = visualizer.GetViewControl();
     
     K_ = K;
@@ -79,15 +79,16 @@ void Mesh_Visualizer::updateErrorMap(cv::Mat &frame) {
     }
 }
 
-void Mesh_Visualizer::UpdateMesh(cv::Mat &frame, std::shared_ptr<open3d::geometry::TriangleMesh> &mesh) {
+void Mesh_Visualizer::UpdateMesh(cv::Mat &frame, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles) {
+    frame.convertTo(frame, -1, 1, 50);
     updateFrame(frame);
     // updateErrorMap(frame);
     Eigen::Matrix3d R;
     Eigen::Vector3d t;
                     t << 0,0,100;
 
-    std::vector<Eigen::Vector3d> vertices = mesh->vertices_;
-    std::vector<Eigen::Vector3i> triangles = mesh->triangles_;
+    // std::vector<Eigen::Vector3d> vertices = mesh->vertices_;
+    // std::vector<Eigen::Vector3i> triangles = mesh->triangles_;
 
     uv_coordinates_.clear();
     for (int i=0;i< triangles.size(); i++) {
@@ -125,22 +126,22 @@ void Mesh_Visualizer::UpdateMesh(cv::Mat &frame, std::shared_ptr<open3d::geometr
     double rotation_angle_rad = M_PI;
     Eigen::AngleAxisd rotation(rotation_angle_rad, rotation_axis);
     Eigen::Matrix3d rotation_matrix = rotation.toRotationMatrix();
-    mesh->textures_.clear();
-    mesh->textures_.push_back(texture_image);
-    // mesh_->vertices_ = vertices;
-    // mesh_->triangles_ = triangles;
+    mesh_->textures_.clear();
+    mesh_->textures_.push_back(texture_image);
+    mesh_->vertices_ = vertices;
+    mesh_->triangles_ = triangles;
 
-    mesh->Rotate(rotation_matrix,t);
+    mesh_->Rotate(rotation_matrix,t);
 
     auto lines = std::make_shared<open3d::geometry::LineSet>();
-    for (const auto& triangle : mesh->triangles_) {
+    for (const auto& triangle : mesh_->triangles_) {
         lines->lines_.push_back({triangle(0), triangle(1)});
         lines->lines_.push_back({triangle(1), triangle(2)});
         lines->lines_.push_back({triangle(2), triangle(0)});
     }
-    lines->points_ = mesh->vertices_;
+    lines->points_ = mesh_->vertices_;
     visualizer.ClearGeometries();
-    visualizer.AddGeometry(mesh);
+    visualizer.AddGeometry(mesh_);
     visualizer.AddGeometry(lines);
     // view_control.SetLookat({10.0, 0.0, 120.0}); // Setze den Startpunkt der Kamera auf (0, 0, 0)
     // view_control.SetFront({0.1, 0.0, -1.0});

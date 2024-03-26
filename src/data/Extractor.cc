@@ -1,6 +1,7 @@
 #include "Extractor.h"
 
 Extractor::Extractor(cv::Mat &frame, std::vector<cv::Point2f> &pixel_reference) : pixel_reference_(pixel_reference) {
+    
     cv::cvtColor(frame, pre_frame_gray_, cv::COLOR_BGR2GRAY);
 }
 

@@ -1,6 +1,7 @@
 #include <opencv2/opencv.hpp>
 #include <Eigen/Core>
 #include <vector>
+#include <yaml-cpp/yaml.h>
 
 class MeshMap;
 class Extractor;
@@ -8,9 +9,12 @@ class Extractor;
 class Tracking {
     public:
         Tracking(cv::Mat &frame, Eigen::Matrix3d K, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, int thresholdValue);
+        Tracking(cv::Mat ref_img, std::vector<Eigen::Vector3d> ref_vertices, std::vector<Eigen::Vector3i> ref_triangles_, const YAML::Node &config);
+        
         void track(cv::Mat &frame, std::vector<cv::Point2f> &pixel);
+        void track(cv::Mat &frame);
         std::vector<double> getObservation();
-        void setunordered_mapping(MeshMap *unordered_map);
+        void set_MeshMap(MeshMap *unordered_map);
         void getObs(std::vector<double> &obs);
 
         double alp[4] = {0.3333,1,0,0};
@@ -24,6 +28,12 @@ class Tracking {
         void findUsableTriangles();
         void createInitialObseration();
         void draw_correspondence(cv::Mat &frame);
+
+
+        std::vector<Eigen::Vector3i> ref_triangles_;
+        std::vector<Eigen::Vector3d> ref_vertices_;
+        cv::Mat ref_img_;
+        const YAML::Node config_;
 
         MeshMap *unordered_map_ = nullptr;
         Extractor *extraction = nullptr;

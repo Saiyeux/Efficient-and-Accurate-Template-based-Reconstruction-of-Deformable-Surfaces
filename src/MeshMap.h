@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 #include <vector>
 #include <unordered_map>
+#include <yaml-cpp/yaml.h>
 
 class Tracking;
 class Optimizer;
@@ -12,6 +13,8 @@ class OptimizerWithoutMiddlePoint;
 class MeshMap {
     public:
         MeshMap(std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K, int max_iteration, int optimization_algorithm, bool verbose);
+        MeshMap(std::vector<Eigen::Vector3d> vertices, std::vector<Eigen::Vector3i>ref_triangles, const YAML::Node &config);
+        
         ~MeshMap();
         void setTracking(Tracking *tracking);
         std::vector<Eigen::Vector3d>& getVertices();
@@ -31,6 +34,7 @@ class MeshMap {
         std::vector<Eigen::Vector3d> vertices_;
         std::vector<Eigen::Vector3i> triangles_;
         Eigen::Matrix3d K_;
+        const YAML::Node config_;
         double fx_ = 0;
         double fy_ = 0;
         double cx_ = 0;

@@ -70,66 +70,39 @@ void compareWithGroundTruth(open3d::geometry::TriangleMesh mesh, cv::Mat &output
 
 int main() {
     // Config
-    // int thresholdValue=40;
-    // yaml_optional_ref(const YAML::Node& ref_node, const std::string& key)
     const YAML::Node config = YAML::LoadFile("../app/config.yaml");
-    int max_iteration = config["Optimizer"]["max_iteration"].as<int>();
-    int thresholdValue = config["Preprocessing"]["brightness_threshold"].as<int>();
-    int optimization_algorithm = config["System"]["optimization_algorithm"].as<int>();
-    bool verbose = config["System"]["verbose"].as<bool>();
-
-    // open3d::visualization::ViewControl &view_control = visualizer.GetViewControl();
-    // view_control.SetLookat({10.0, 0.0, 120.0}); // Setze den Startpunkt der Kamera auf (0, 0, 0)
-    // view_control.SetFront({0.1, 0.0, -1.0});
     
     // Creation of a mesh
     std::string video_file = config["System"]["video_file_path"].as<std::string>();
    std::string obj_file_path = config["System"]["reference_file_path"].as<std::string>();
 
-    Mesh_Visualizer *visualize;
-    Eigen::Matrix3d K;
+
+
     cv::Mat frame;
     cv::VideoCapture cap(video_file);
     cap >> frame;
-    K <<    config["Image"]["fx"].as<double>(), 0.000000, config["Image"]["cx"].as<double>(),
-            0.000000, config["Image"]["fy"].as<double>(), config["Image"]["cy"].as<double>(),
-            0.000000, 0.000000, 1.000000;
+  
 
     std::shared_ptr<open3d::geometry::TriangleMesh> mesh = open3d::io::CreateMeshFromFile(obj_file_path);
     std::vector<Eigen::Vector3d> vertices = mesh->vertices_;
     std::vector<Eigen::Vector3i> triangles = mesh->triangles_;
-    
-    visualize = new Mesh_Visualizer(config["Visualization"]["width"].as<int>(), config["Visualization"]["height"].as<int>(), vertices, triangles, K, mesh);
-    visualize->initImageParams(frame);
 
-  
-    std::vector<double> inital_obs;
-    Tracking *tracking = new Tracking(frame, K, vertices, triangles, thresholdValue);
-    MeshMap *map = new MeshMap(vertices, triangles, K, max_iteration, optimization_algorithm, verbose);
     
-    tracking->setunordered_mapping(map); // obs_set in here!
-    map->setTracking(tracking);
+    System *sys = new System(triangles, vertices, frame, config, mesh); 
     
-    std::vector<cv::Point2f> pixel; // mittlerweile unneccesary?
-    
-    System *sys = new System(triangles, vertices, frame, config);
-    
-
-    // auto scene = open3d::t::geometry::RaycastingScene() ;
-   
-    
-    // exit(1);
     int FrameNo = 0;
     
     while(1) {
         if(frame.empty())
             break;
-        
-        tracking->track(frame, pixel);
-        map->unordered_map();
+        sys->monocular_feed(frame);
+        // mesh->vertices_ = vertices;
+        // mesh->triangles_ = triangles;
+        // tracking->track(frame, pixel);
+        // map->unordered_map();
 
-        mesh->vertices_ = map->getVertices();
-        mesh->triangles_ = map->getTriangles();
+        // mesh->vertices_ = map->getVertices();
+        // mesh->triangles_ = map->getTriangles();
         
         // cv::Mat error_map;
         // compareWithGroundTruth(*mesh, error_map, FrameNo);
@@ -138,8 +111,8 @@ int main() {
         // cv::waitKey(0);
     
         // visualize->UpdateMesh(error_map, mesh);
-        frame.convertTo(frame, -1, 1, 50);
-        visualize->UpdateMesh(frame, mesh);
+        // frame.convertTo(frame, -1, 1, 50);
+        // visualize->UpdateMesh(frame, mesh);
 
         int key = cv::waitKey(1);
         if (key == 'q')

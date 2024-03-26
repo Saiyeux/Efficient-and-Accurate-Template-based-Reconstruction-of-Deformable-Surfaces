@@ -8,7 +8,7 @@ class Mesh_Visualizer {
         Mesh_Visualizer(int width, int height, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K, std::shared_ptr<open3d::geometry::TriangleMesh> mesh);
         ~Mesh_Visualizer();
         void initImageParams(cv::Mat &frame);
-        void UpdateMesh(cv::Mat &frame, std::shared_ptr<open3d::geometry::TriangleMesh> &mesh);
+        void UpdateMesh(cv::Mat &frame, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles);
         
     private:
         void updateFrame(cv::Mat &frame);

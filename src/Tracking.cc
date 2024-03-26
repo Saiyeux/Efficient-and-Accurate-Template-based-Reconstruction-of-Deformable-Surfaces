@@ -19,7 +19,31 @@ Tracking::Tracking(cv::Mat &frame, Eigen::Matrix3d K, std::vector<Eigen::Vector3
     extraction = new Extractor(frame, pixel_reference_);
 }
 
-void Tracking::setunordered_mapping(MeshMap *unordered_map) {
+Tracking::Tracking(cv::Mat ref_img, std::vector<Eigen::Vector3d> ref_vertices, std::vector<Eigen::Vector3i> ref_triangles, const YAML::Node &config)
+: ref_img_(ref_img), vertices_(ref_vertices), triangles_(ref_triangles), config_(config), number_triangles_(ref_triangles.size()), number_vertices_(ref_vertices.size()) {
+    K_ <<    config["Image"]["fx"].as<double>(), 0.000000, config["Image"]["cx"].as<double>(),
+            0.000000, config["Image"]["fy"].as<double>(), config["Image"]["cy"].as<double>(),
+            0.000000, 0.000000, 1.000000;
+    fx_= K_(0,0);
+    fy_= K_(1,1);
+    cx_= K_(0,2);
+    cy_= K_(1,2);
+    pre_frame_ = ref_img;
+    // vertices_ = ref_vertices_;
+    // triangles_ = ref_triangles_;
+    
+    createMask(config["Preprocessing"]["brightness_threshold"].as<int>());
+
+    findUsableVerticies();
+    
+    findUsableTriangles();
+    
+    createInitialObseration();
+    extraction = new Extractor(ref_img, pixel_reference_);
+}
+        
+
+void Tracking::set_MeshMap(MeshMap *unordered_map) {
     unordered_map_ = unordered_map;
     unordered_map_->set_Observation(obs);
 }
@@ -30,7 +54,7 @@ std::vector<double> Tracking::getObservation() {
 
 
 void Tracking::createInitialObseration() {
-    
+    ;
     bool used_vertex[vertices_.size()];
     for (size_t i = 0; i < vertices_.size(); ++i) {
         used_vertex[i] = false; // oder 0, falls das Array Werte vom Typ char enthält
@@ -95,6 +119,7 @@ void Tracking::createInitialObseration() {
         //     std::cout << face_id << " " << u << " " << v << " " 
         // << alpha << " " << beta << " " << gamma << " " << std::endl;
             pixel_reference_.push_back(cv::Point2f((u),(v)));
+            
         }
     }
 }
@@ -200,6 +225,18 @@ static int FrameNo = 0;
     }
     obs = tmp;
     FrameNo++;
+}
+
+void Tracking::track(cv::Mat &frame) {
+    cv::Mat modifiedFrame = frame.clone();
+
+    extraction->extract(frame, pixel_correspondence_);
+    updateObservation();
+
+    this->draw_correspondence(modifiedFrame);
+
+    cv::imshow("Frame", modifiedFrame);
+
 }
 
 
