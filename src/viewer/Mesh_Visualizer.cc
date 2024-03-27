@@ -1,11 +1,13 @@
 #include "Mesh_Visualizer.h"
 
 
-Mesh_Visualizer::Mesh_Visualizer(int width, int height, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K, std::shared_ptr<open3d::geometry::TriangleMesh> mesh) :
-vertices_(vertices), triangles_(triangles) {
+Mesh_Visualizer::Mesh_Visualizer(int width, int height, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K, std::shared_ptr<open3d::geometry::TriangleMesh> mesh, bool show_only_optimised_part) :
+vertices_(vertices), triangles_(triangles), show_only_optimised_part_(show_only_optimised_part) {
     visualizer.CreateVisualizerWindow("Mesh Visualisierung", width, height);
     // mesh_ = std::make_shared<open3d::geometry::TriangleMesh>(vertices, trian);
-    mesh_ = std::make_shared<open3d::geometry::TriangleMesh>(*mesh);
+    mesh_ = std::make_shared<open3d::geometry::TriangleMesh>(open3d::geometry::TriangleMesh());
+    std::vector<int> material_ids(triangles.size(), 0); // Setze alle Material-IDs auf 0
+    mesh_->triangle_material_ids_ = material_ids;
     // view_control = visualizer.GetViewControl();
     
     K_ = K;
@@ -31,6 +33,8 @@ vertices_(vertices), triangles_(triangles) {
         a << v1.x()/360, v1.y()/288;
         b << v2.x()/360, v2.y()/288;
         c << v3.x()/360, v3.y()/288;
+
+       
         
         uv_coordinates_.push_back(a);
         uv_coordinates_.push_back(b);
@@ -43,18 +47,34 @@ Mesh_Visualizer::~Mesh_Visualizer() {
     visualizer.DestroyVisualizerWindow();
 }
 
-void Mesh_Visualizer::initImageParams(cv::Mat &frame) {
+void Mesh_Visualizer::initImageParams(cv::Mat &frame, std::vector<bool> &usable_triangle, std::vector<bool> &usable_vertices) {
     // Setzen Sie die Größe und Kanalinformationen des Image-Objekts
     width_ = frame.cols;
     height_ = frame.rows;
     num_channels_ = frame.channels();
     texture_image.Prepare(width_, height_, num_channels_, bytes_per_channel_);
     texture_error_map.Prepare(width_,height_,1,bytes_per_channel_);
+    usable_vertices_ = usable_vertices;
+    for(int i=0;i<usable_vertices.size(); i++) {
+        usable_vertices_[i] = !usable_vertices[i];
+    }
+
+    // usable_triangle_ = usable_triangle;
+
+    // std::cout << frame.size() <<std::endl;
+    // std::cout << width_ <<std::endl;
+    // std::cout << height_ <<std::endl;
+    // std::cout << num_channels_<<std::endl;
+    // std::cout << bytes_per_channel_<<std::endl;
     // Zugriff auf die Rohdaten des Image-Objekts
 }
 
 void Mesh_Visualizer::updateFrame(cv::Mat &frame) {
     // Kopieren Sie die Pixelwerte aus der cv::Mat in das Image-Objekt
+    // std::cout << frame.size() << std::endl;
+    // exit(1);
+    // std::cout << frame.size() << std::endl;
+
     uint8_t* data_ptr_ = texture_image.data_.data();
     cv::Mat rgb;
     cv::cvtColor(frame,rgb, cv::COLOR_BGR2RGB);
@@ -80,6 +100,9 @@ void Mesh_Visualizer::updateErrorMap(cv::Mat &frame) {
 }
 
 void Mesh_Visualizer::UpdateMesh(cv::Mat &frame, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles) {
+    
+    
+    
     frame.convertTo(frame, -1, 1, 50);
     updateFrame(frame);
     // updateErrorMap(frame);
@@ -87,8 +110,10 @@ void Mesh_Visualizer::UpdateMesh(cv::Mat &frame, std::vector<Eigen::Vector3d> &v
     Eigen::Vector3d t;
                     t << 0,0,100;
 
-    // std::vector<Eigen::Vector3d> vertices = mesh->vertices_;
-    // std::vector<Eigen::Vector3i> triangles = mesh->triangles_;
+    Eigen::Vector3d rotation_axis(1.0, 0.0, 0.0); // y-Achse
+    double rotation_angle_rad = M_PI;
+    Eigen::AngleAxisd rotation(rotation_angle_rad, rotation_axis);
+    Eigen::Matrix3d rotation_matrix = rotation.toRotationMatrix();
 
     uv_coordinates_.clear();
     for (int i=0;i< triangles.size(); i++) {
@@ -118,18 +143,17 @@ void Mesh_Visualizer::UpdateMesh(cv::Mat &frame, std::vector<Eigen::Vector3d> &v
         uv_coordinates_.push_back(b);
         uv_coordinates_.push_back(c);
     }
+
     mesh_->triangle_uvs_ = uv_coordinates_;
-
-
-
-    Eigen::Vector3d rotation_axis(1.0, 0.0, 0.0); // y-Achse
-    double rotation_angle_rad = M_PI;
-    Eigen::AngleAxisd rotation(rotation_angle_rad, rotation_axis);
-    Eigen::Matrix3d rotation_matrix = rotation.toRotationMatrix();
-    mesh_->textures_.clear();
-    mesh_->textures_.push_back(texture_image);
     mesh_->vertices_ = vertices;
     mesh_->triangles_ = triangles;
+    mesh_->textures_.clear();
+    mesh_->textures_.push_back(texture_image);
+
+    if(show_only_optimised_part_)
+        mesh_->RemoveVerticesByMask(usable_vertices_);
+    
+    
 
     mesh_->Rotate(rotation_matrix,t);
 
@@ -140,6 +164,7 @@ void Mesh_Visualizer::UpdateMesh(cv::Mat &frame, std::vector<Eigen::Vector3d> &v
         lines->lines_.push_back({triangle(2), triangle(0)});
     }
     lines->points_ = mesh_->vertices_;
+
     visualizer.ClearGeometries();
     visualizer.AddGeometry(mesh_);
     visualizer.AddGeometry(lines);
@@ -150,6 +175,4 @@ void Mesh_Visualizer::UpdateMesh(cv::Mat &frame, std::vector<Eigen::Vector3d> &v
     // visualizer.Run();
     visualizer.PollEvents();
     visualizer.UpdateRender();
-    
-
 }

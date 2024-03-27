@@ -17,8 +17,9 @@ System::System(std::vector<Eigen::Vector3i> ref_triangles, std::vector<Eigen::Ve
 
     tracking_->set_MeshMap(map_);
     map_->setTracking(tracking_);
-    viewer_ = new Mesh_Visualizer(config["Visualization"]["width"].as<int>(), config["Visualization"]["height"].as<int>(), ref_vertices_, ref_triangles_, K, mesh_);
-    viewer_->initImageParams(ref_img);
+    
+    viewer_ = new Mesh_Visualizer(config["Visualization"]["width"].as<int>(), config["Visualization"]["height"].as<int>(), ref_vertices_, ref_triangles_, K, mesh_, config["Visualization"]["show_only_optimised_part"].as<bool>());
+    viewer_->initImageParams(ref_img, tracking_->usable_triangles_, tracking_->usable_vertices_);
     
 }
 

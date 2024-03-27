@@ -5,9 +5,9 @@
 
 class Mesh_Visualizer {
     public:
-        Mesh_Visualizer(int width, int height, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K, std::shared_ptr<open3d::geometry::TriangleMesh> mesh);
+        Mesh_Visualizer(int width, int height, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K, std::shared_ptr<open3d::geometry::TriangleMesh> mesh, bool show_only_optimised_part);
         ~Mesh_Visualizer();
-        void initImageParams(cv::Mat &frame);
+        void initImageParams(cv::Mat &frame, std::vector<bool> &usable_triangle, std::vector<bool> &usable_vertices);
         void UpdateMesh(cv::Mat &frame, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles);
         
     private:
@@ -28,5 +28,8 @@ class Mesh_Visualizer {
         int height_ = 0;
         int num_channels_ = 0;
         int bytes_per_channel_ = sizeof(uint8_t);
+        std::vector<bool> usable_triangle_;
+        std::vector<bool> usable_vertices_;
+        bool show_only_optimised_part_ = false;
 
 };

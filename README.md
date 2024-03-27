@@ -14,9 +14,11 @@
 ## Installation
 ### Dependencies
 <ul>
+    <li>C++17</li>
     <li>OpenCV-4.5.5</li>
-    <li>Eigen-3.7</li>
+    <li>Eigen-3.3</li>
     <li>Open3D-0.18</li>
+    <li>Pangolin -Version Missing-</li>
 </ul>
 
 ## Currently working on
@@ -29,6 +31,7 @@
 - Writing the Readme
 - preprocessing of the reference image, for better trackable feature points
 - Mesh_Visualizer -> Bad programmed and I dont know why it works. Make it proper!
+- Drawing Keypoints can be more precise! at the moment I draw all!
 
 ## License
 

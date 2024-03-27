@@ -21,6 +21,9 @@ class Tracking {
         double bet[4] = {0.3333,0,1,0};
         double gam[4] = {0.3334,0,0,1};
 
+        std::vector<bool> usable_vertices_;
+        std::vector<bool> usable_triangles_;
+
     private:
         void updateObservation();
         void createMask(int thresholdValue);
@@ -47,8 +50,7 @@ class Tracking {
         double cy_ = 0;
         int number_vertices_= 0;
         int number_triangles_ = 0;
-        std::vector<bool> usable_vertices_;
-        std::vector<bool> usable_triangles_;
+        
         std::vector<double> obs; //  I dont think it is useful here! -> but for now let us assume that all pixel are very good! 
                                 // put obs and also the creation of it in unordered_mapping! 
 
