@@ -164,7 +164,8 @@ void Mesh_Visualizer::UpdateMesh(cv::Mat &frame, std::vector<Eigen::Vector3d> &v
         lines->lines_.push_back({triangle(2), triangle(0)});
     }
     lines->points_ = mesh_->vertices_;
-
+    
+    
     visualizer.ClearGeometries();
     visualizer.AddGeometry(mesh_);
     visualizer.AddGeometry(lines);

@@ -15,9 +15,9 @@
 ### Dependencies
 <ul>
     <li>C++17</li>
-    <li>OpenCV-4.5.5</li>
+    <li>OpenCV-4.5.0</li>
     <li>Eigen-3.3</li>
-    <li>Open3D-0.18</li>
+    <li>Open3D-0.18.0</li>
     <li>Pangolin -Version Missing-</li>
 </ul>
 
