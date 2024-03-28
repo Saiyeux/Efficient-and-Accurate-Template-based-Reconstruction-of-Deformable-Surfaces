@@ -52,3 +52,4 @@ install(FILES ${HEADERS}
 add_subdirectory(optimize)
 add_subdirectory(viewer)
 add_subdirectory(data)
+add_subdirectory(GT_compare)
