@@ -77,7 +77,7 @@ void Tracking::createInitialObseration() {
             
             if(int(alpha) == 1) {
                 if(used_vertex[f1]) {
-                    continue;
+                    continue; 
                 } else {
                     used_vertex[f1] = true;
                 }
@@ -138,7 +138,10 @@ void Tracking::findUsableVerticies() {
         
         double u = fx_*x/z + cx_;
         double v = fy_*y/z + cy_;
-        if((u >= 2) && (v >= 5) && (u < 360) && (v < 288) && (mask_.at<uchar>(int(v),int(u)) == 255)) {
+        if((u >= config_["Preprocessing"]["width_min"].as<int>()) && 
+        (v >= config_["Preprocessing"]["height_min"].as<int>()) && 
+        (u < config_["Preprocessing"]["width_max"].as<int>()) && 
+        (v < config_["Preprocessing"]["height_max"].as<int>()) && (mask_.at<uchar>(int(v),int(u)) == 255)) {
             isPointUsable = true;
         } 
         usable_vertices_.push_back(isPointUsable);
@@ -178,9 +181,6 @@ void Tracking::draw_correspondence(cv::Mat &frame) {
     }
 }
 
-// #include <fstream>
-// #include <sstream>
-// #include <iostream>
 void Tracking::updateObservation() {
 
     for(int obs_id=0; obs_id < obs.size()/6; obs_id++) {
@@ -191,40 +191,6 @@ void Tracking::updateObservation() {
         obs[obs_id*6+1] = u;
         obs[obs_id*6+2] = v;
     }
-// static int FrameNo = 0;
-    // std::ofstream file("obs_test/obs_" + std::to_string(FrameNo) + ".txt");
-    // FrameNo++;
-    // for(int i=0; i < obs.size()/6; i++) {
-    //     file <<  std::setprecision(20) << std::fixed <<  obs[i*6] << " " << obs[i*6+1] << " " << obs[i*6+2] << " " << obs[i*6+3] << " " << obs[i*6+4] << " " << obs[i*6+5] << std::endl;
-    // }
-    // file.close();
-    
-    // std::string file_path = "obs_test3/obs_"+ std::to_string(FrameNo) +".txt";
-    // std::ifstream obj_file(file_path);
-    // if (!obj_file.is_open()) {
-    //     std::cerr << "Incorrect path to the Obj-file." << std::endl;
-    //     return;
-    // }
-    // std::string line;
-    // std::vector<double> tmp;
-    // while (std::getline(obj_file, line)) {
-    //     std::stringstream sstream(line);
-    //     std::string word;
-    //     sstream >> word;
-    //     tmp.push_back(std::stod(word));
-    //     sstream >> word;
-    //     tmp.push_back(std::stod(word));
-    //     sstream >> word;
-    //     tmp.push_back(std::stod(word));
-    //     sstream >> word;
-    //     tmp.push_back(std::stod(word));
-    //     sstream >> word;
-    //     tmp.push_back(std::stod(word));
-    //     sstream >> word;
-    //     tmp.push_back(std::stod(word));
-    // }
-    // obs = tmp;
-    // FrameNo++;
 }
 
 void Tracking::track(cv::Mat &frame) {

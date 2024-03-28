@@ -30,6 +30,10 @@ Image:
 
 Preprocessing:
   brightness_threshold: 40
+  width_min: 2
+  width_max: 360
+  height_min: 5
+  height_max: 288
 # first 40, then 70, then 60
 
 Visualization:
@@ -47,7 +51,7 @@ GT_Mesh:
 Hamlyn:
   FPS: 25
   multiplier: 30
-  additon: 0.093333
+  addition: 0.093333
   modulo: 20
 
 
