@@ -6,8 +6,8 @@
 #include "viewer/Mesh_Visualizer.h"
 
 
-System::System(std::vector<Eigen::Vector3i> ref_triangles, std::vector<Eigen::Vector3d> ref_vertices, cv::Mat ref_img, const YAML::Node &config, std::shared_ptr<open3d::geometry::TriangleMesh> mesh)
- : ref_triangles_(ref_triangles), ref_vertices_(ref_vertices), ref_img_(ref_img), config_(config), mesh_(mesh) {
+System::System(std::vector<Eigen::Vector3i> ref_triangles, std::vector<Eigen::Vector3d> ref_vertices, cv::Mat ref_img, const YAML::Node &config, std::shared_ptr<open3d::geometry::TriangleMesh> mesh, GroundTruth_compare *gt)
+ : ref_triangles_(ref_triangles), ref_vertices_(ref_vertices), ref_img_(ref_img), config_(config), mesh_(mesh), gt_(gt) {
     Eigen::Matrix3d K;
     K <<    config["Image"]["fx"].as<double>(), 0.000000, config["Image"]["cx"].as<double>(),
             0.000000, config["Image"]["fy"].as<double>(), config["Image"]["cy"].as<double>(),
@@ -21,12 +21,6 @@ System::System(std::vector<Eigen::Vector3i> ref_triangles, std::vector<Eigen::Ve
     
     viewer_ = new Mesh_Visualizer(config["Visualization"]["width"].as<int>(), config["Visualization"]["height"].as<int>(), ref_vertices_, ref_triangles_, K, mesh_, config["Visualization"]["show_only_optimised_part"].as<bool>());
     viewer_->initImageParams(ref_img, tracking_->usable_triangles_, tracking_->usable_vertices_);
-    HamlynGT *t = new HamlynGT();
-    // t->compareWithGroundTruth(mesh_);
-    GroundTruth_compare *test = t;
-    
-    test->compareWithGroundTruth(mesh_);
-    exit(1);
     
 }
 

@@ -53,5 +53,6 @@ Hamlyn:
   multiplier: 30
   addition: 0.093333
   modulo: 20
+  gt_path: "../data/Hamlyn/f7/heartDepthMap_"
 
 

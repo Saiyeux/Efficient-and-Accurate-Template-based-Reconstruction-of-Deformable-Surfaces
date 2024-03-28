@@ -2,6 +2,7 @@
 // #include "Tracking.h"
 // #include "viewer/Mesh_Visualizer.h"
 #include "System.h"
+#include "GT_compare/HamlynGT.h"
 
 #include <opencv2/opencv.hpp>
 #include <Eigen/Core>
@@ -102,7 +103,7 @@ int main() {
     // Config
     const YAML::Node config = YAML::LoadFile("../app/Phantom7/config.yaml");
     uint gt_id = int(round((double(FrameNo) / config["Hamlyn"]["FPS"].as<double>() + config["Hamlyn"]["addition"].as<double>()) * config["Hamlyn"]["multiplier"].as<double>())) % config["Hamlyn"]["modulo"].as<int>();
-    
+    HamlynGT* gt = new HamlynGT(config);
     // Creation of a mesh
     std::string video_file = config["System"]["video_file_path"].as<std::string>();
     // std::string obj_file_path = config["System"]["reference_file_path"].as<std::string>();
@@ -118,7 +119,7 @@ int main() {
     std::vector<Eigen::Vector3i> triangles = mesh->triangles_;
 
     
-    System *sys = new System(triangles, vertices, frame, config, mesh); 
+    System *sys = new System(triangles, vertices, frame, config, mesh, gt); 
     
     
     
