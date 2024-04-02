@@ -1,7 +1,8 @@
-#include "MeshMap.h"
-#include "Tracking.h"
+// #include "MeshMap.h"
+// #include "Tracking.h"
 // #include "viewer/Mesh_Visualizer.h"
 #include "System.h"
+#include "GT_compare/HamlynGT.h"
 
 #include <opencv2/opencv.hpp>
 #include <Eigen/Core>
@@ -81,7 +82,7 @@ std::shared_ptr<open3d::geometry::TriangleMesh> createRefMesh(const YAML::Node &
         double u = K(0, 0) * vertex(0) / vertex(2) + K(0, 2);
         double v = K(1, 1) * vertex(1) / vertex(2) + K(1, 2);
         
-        if (u < 0 || u > 360 || v < 0 || v > 288) {
+        if (u < 0 || u > config["Image"]["width"].as<int>() || v < 0 || v > config["Image"]["height"].as<int>()) {
             bad_vertices.push_back(i);
         }
         // else {
@@ -98,11 +99,11 @@ std::shared_ptr<open3d::geometry::TriangleMesh> createRefMesh(const YAML::Node &
 int main() {
     // frame_id
     int FrameNo = 0;
-    uint gt_id = int(round((double(FrameNo) / 25.0 + 0.466667) * 30)) % 20;
 
     // Config
     const YAML::Node config = YAML::LoadFile("../app/Phantom5/config.yaml");
-    
+    uint gt_id = int(round((double(FrameNo) / config["Hamlyn"]["FPS"].as<double>() + config["Hamlyn"]["addition"].as<double>()) * config["Hamlyn"]["multiplier"].as<double>())) % config["Hamlyn"]["modulo"].as<int>();
+    HamlynGT* gt = new HamlynGT(config);
     // Creation of a mesh
     std::string video_file = config["System"]["video_file_path"].as<std::string>();
     // std::string obj_file_path = config["System"]["reference_file_path"].as<std::string>();
@@ -118,7 +119,7 @@ int main() {
     std::vector<Eigen::Vector3i> triangles = mesh->triangles_;
 
     
-    System *sys = new System(triangles, vertices, frame, config, mesh); 
+    System *sys = new System(triangles, vertices, frame, config, mesh, gt); 
     
     
     
