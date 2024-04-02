@@ -1,13 +1,15 @@
 #ifndef GROUNDTRUTH_H
 #define GROUNDTRUTH_H
 
+#include <Eigen/Core>
+#include <vector>
 #include <iostream>
-#include <open3d/Open3D.h>
+
 
 class GroundTruth_compare {
 public:
     GroundTruth_compare();
-    virtual void compareWithGroundTruth(std::shared_ptr<open3d::geometry::TriangleMesh> mesh) {};
+    virtual void compareWithGroundTruth(std::vector<Eigen::Vector3d> vertices, std::vector<Eigen::Vector3i> triangles) {};
 private:
 
 };
