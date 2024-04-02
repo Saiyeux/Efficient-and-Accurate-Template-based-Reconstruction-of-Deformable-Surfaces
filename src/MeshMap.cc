@@ -1,8 +1,8 @@
 #include "MeshMap.h"
 #include "Tracking.h"
-#include "Optimizer.h"
-#include "OptimizerWithoutMiddlePoint.h"
-#include "OptimizerDistanceOnly.h"
+#include "optimize/Optimizer.h"
+#include "optimize/OptimizerWithoutMiddlePoint.h"
+#include "optimize/OptimizerDistanceOnly.h"
 
 
 
@@ -18,6 +18,29 @@ MeshMap::MeshMap(std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vect
                 optimizeWithout_ = new OptimizerWithoutMiddlePoint(max_iteration, vertices_, triangles_, verbose);
                 
         }
+
+MeshMap::MeshMap(std::vector<Eigen::Vector3d> vertices, std::vector<Eigen::Vector3i>triangles, const YAML::Node &config) 
+: vertices_(vertices), triangles_(triangles), config_(config) {
+    K_ <<    config["Image"]["fx"].as<double>(), 0.000000, config["Image"]["cx"].as<double>(),
+            0.000000, config["Image"]["fy"].as<double>(), config["Image"]["cy"].as<double>(),
+            0.000000, 0.000000, 1.000000;
+    fx_= K_(0,0);
+    fy_= K_(1,1);
+    cx_= K_(0,2);
+    cy_= K_(1,2);
+
+    int max_iteration = config["Optimizer"]["max_iteration"].as<int>();
+    int optimization_algorithm = config["System"]["optimization_algorithm"].as<int>();
+    bool verbose = config["System"]["verbose"].as<bool>();
+
+
+    if (optimization_algorithm_ == 0)
+        optimizer_ = new Optimizer(max_iteration, vertices_, triangles_, verbose);
+    else if (optimization_algorithm_ == 1)
+        optimizerDistance_ = new OptimizerDistanceOnly(max_iteration, vertices, triangles_, K_, verbose);
+    else if (optimization_algorithm_ == 2)
+        optimizeWithout_ = new OptimizerWithoutMiddlePoint(max_iteration, vertices_, triangles_, verbose);
+}
 
 MeshMap::~MeshMap() {
     // delete everything

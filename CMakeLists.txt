@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.22)
 project(Sparse_Template_Based_Reconstruction)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -22,7 +22,7 @@ ELSE()
 ENDIF()
 include_directories(${CHOLMOD_INCLUDE_DIR})
 
-find_package(OpenCV REQUIRED)
+find_package(OpenCV 4.5.0 REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 message(STATUS "Use OpenCV ${OpenCV_VERSION}")
 
@@ -37,7 +37,8 @@ include_directories(${Pangolin_INCLUDE_DIR})
 
 
 # Finde die Open3D-Bibliothek
-find_package(Open3D REQUIRED)
+find_package(Open3D 0.18.0 REQUIRED)
+message(STATUS "Open3D found")
 
 # Füge den include-Ordner von Open3D hinzu
 include_directories(${Open3D_INCLUDE_DIRS})

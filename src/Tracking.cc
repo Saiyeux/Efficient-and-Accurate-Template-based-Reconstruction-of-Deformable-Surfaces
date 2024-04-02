@@ -1,9 +1,9 @@
 #include "Tracking.h"
-#include "Extractor.h"
+#include "data/Extractor.h"
 #include "MeshMap.h"
 #include <iostream>
 #include <algorithm>
-#include<fstream>
+#include <fstream>
 
 Tracking::Tracking(cv::Mat &frame, Eigen::Matrix3d K, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, int thresholdValue) :  K_(K), fx_(K(0,0)), fy_(K(1,1)), cx_(K(0,2)), cy_(K(1,2)), pre_frame_(frame),
     vertices_(vertices), triangles_(triangles), number_triangles_(triangles_.size()), number_vertices_(vertices_.size())
@@ -19,7 +19,31 @@ Tracking::Tracking(cv::Mat &frame, Eigen::Matrix3d K, std::vector<Eigen::Vector3
     extraction = new Extractor(frame, pixel_reference_);
 }
 
-void Tracking::setunordered_mapping(MeshMap *unordered_map) {
+Tracking::Tracking(cv::Mat ref_img, std::vector<Eigen::Vector3d> ref_vertices, std::vector<Eigen::Vector3i> ref_triangles, const YAML::Node &config)
+: ref_img_(ref_img), vertices_(ref_vertices), triangles_(ref_triangles), config_(config), number_triangles_(ref_triangles.size()), number_vertices_(ref_vertices.size()) {
+    K_ <<    config["Image"]["fx"].as<double>(), 0.000000, config["Image"]["cx"].as<double>(),
+            0.000000, config["Image"]["fy"].as<double>(), config["Image"]["cy"].as<double>(),
+            0.000000, 0.000000, 1.000000;
+    fx_= K_(0,0);
+    fy_= K_(1,1);
+    cx_= K_(0,2);
+    cy_= K_(1,2);
+    pre_frame_ = ref_img;
+    // vertices_ = ref_vertices_;
+    // triangles_ = ref_triangles_;
+    
+    createMask(config["Preprocessing"]["brightness_threshold"].as<int>());
+
+    findUsableVerticies();
+    
+    findUsableTriangles();
+    
+    createInitialObseration();
+    extraction = new Extractor(ref_img, pixel_reference_);
+}
+        
+
+void Tracking::set_MeshMap(MeshMap *unordered_map) {
     unordered_map_ = unordered_map;
     unordered_map_->set_Observation(obs);
 }
@@ -30,7 +54,7 @@ std::vector<double> Tracking::getObservation() {
 
 
 void Tracking::createInitialObseration() {
-    
+    ;
     bool used_vertex[vertices_.size()];
     for (size_t i = 0; i < vertices_.size(); ++i) {
         used_vertex[i] = false; // oder 0, falls das Array Werte vom Typ char enthält
@@ -53,7 +77,7 @@ void Tracking::createInitialObseration() {
             
             if(int(alpha) == 1) {
                 if(used_vertex[f1]) {
-                    continue;
+                    continue; 
                 } else {
                     used_vertex[f1] = true;
                 }
@@ -95,6 +119,7 @@ void Tracking::createInitialObseration() {
         //     std::cout << face_id << " " << u << " " << v << " " 
         // << alpha << " " << beta << " " << gamma << " " << std::endl;
             pixel_reference_.push_back(cv::Point2f((u),(v)));
+            
         }
     }
 }
@@ -113,7 +138,10 @@ void Tracking::findUsableVerticies() {
         
         double u = fx_*x/z + cx_;
         double v = fy_*y/z + cy_;
-        if((u >= 2) && (v >= 5) && (u < 360) && (v < 288) && (mask_.at<uchar>(int(v),int(u)) == 255)) {
+        if((u >= config_["Preprocessing"]["width_min"].as<int>()) && 
+        (v >= config_["Preprocessing"]["height_min"].as<int>()) && 
+        (u < config_["Preprocessing"]["width_max"].as<int>()) && 
+        (v < config_["Preprocessing"]["height_max"].as<int>()) && (mask_.at<uchar>(int(v),int(u)) == 255)) {
             isPointUsable = true;
         } 
         usable_vertices_.push_back(isPointUsable);
@@ -153,9 +181,6 @@ void Tracking::draw_correspondence(cv::Mat &frame) {
     }
 }
 
-#include <fstream>
-#include <sstream>
-#include <iostream>
 void Tracking::updateObservation() {
 
     for(int obs_id=0; obs_id < obs.size()/6; obs_id++) {
@@ -166,40 +191,18 @@ void Tracking::updateObservation() {
         obs[obs_id*6+1] = u;
         obs[obs_id*6+2] = v;
     }
-static int FrameNo = 0;
-    // std::ofstream file("obs_test/obs_" + std::to_string(FrameNo) + ".txt");
-    // FrameNo++;
-    // for(int i=0; i < obs.size()/6; i++) {
-    //     file <<  std::setprecision(20) << std::fixed <<  obs[i*6] << " " << obs[i*6+1] << " " << obs[i*6+2] << " " << obs[i*6+3] << " " << obs[i*6+4] << " " << obs[i*6+5] << std::endl;
-    // }
-    // file.close();
-    
-    std::string file_path = "obs_test3/obs_"+ std::to_string(FrameNo) +".txt";
-    std::ifstream obj_file(file_path);
-    if (!obj_file.is_open()) {
-        std::cerr << "Incorrect path to the Obj-file." << std::endl;
-        return;
-    }
-    std::string line;
-    std::vector<double> tmp;
-    while (std::getline(obj_file, line)) {
-        std::stringstream sstream(line);
-        std::string word;
-        sstream >> word;
-        tmp.push_back(std::stod(word));
-        sstream >> word;
-        tmp.push_back(std::stod(word));
-        sstream >> word;
-        tmp.push_back(std::stod(word));
-        sstream >> word;
-        tmp.push_back(std::stod(word));
-        sstream >> word;
-        tmp.push_back(std::stod(word));
-        sstream >> word;
-        tmp.push_back(std::stod(word));
-    }
-    obs = tmp;
-    FrameNo++;
+}
+
+void Tracking::track(cv::Mat &frame) {
+    cv::Mat modifiedFrame = frame.clone();
+
+    extraction->extract(frame, pixel_correspondence_);
+    updateObservation();
+
+    this->draw_correspondence(modifiedFrame);
+
+    cv::imshow("Frame", modifiedFrame);
+
 }
 
 
