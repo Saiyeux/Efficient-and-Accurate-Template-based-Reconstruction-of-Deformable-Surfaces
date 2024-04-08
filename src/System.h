@@ -13,7 +13,7 @@ class System {
 public:
     System(std::vector<Eigen::Vector3i> ref_triangles, std::vector<Eigen::Vector3d> ref_vertices, cv::Mat ref_img, const YAML::Node &config, std::shared_ptr<open3d::geometry::TriangleMesh> mesh, GroundTruth_compare *gt);
 
-    void monocular_feed(cv::Mat &img);
+    void monocular_feed(cv::Mat &img); 
 
 private:
     std::vector<Eigen::Vector3i> ref_triangles_;

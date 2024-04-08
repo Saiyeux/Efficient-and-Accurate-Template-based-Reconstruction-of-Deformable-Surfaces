@@ -42,10 +42,10 @@ void HamlynGT::compareWithGroundTruth(std::vector<Eigen::Vector3d> vertices, std
 
     float mean =0.0f;
     for (const auto& vector : values) {
-        mean += vector;
+        mean += vector*vector;
     }
     mean /= values.size();
-
+    mean = sqrt(mean);
     std::cout << mean << " " << values.size() << std::endl;
     FrameNo_++;
     

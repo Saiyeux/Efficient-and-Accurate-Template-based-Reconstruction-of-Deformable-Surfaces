@@ -1,8 +1,8 @@
 System:
-  video_file_path: "../data/Hamlyn/output.mp4"
-  reference_file_path: "../data/Hamlyn/f7/heartDepthMap_"
+  video_file_path: "../data/HamlynDatasetShort/f7phantom/f7_dynamic_deint_L.avi"
+  reference_file_path: "../data/HamlynDatasetShort/f7phantom/f7/heartDepthMap_"
 
-  optimization_algorithm: 1
+  optimization_algorithm: 0
   # 0: normal
   # 1: Distance Only
   # 2: Normal with only the vertices as reporjection
@@ -50,6 +50,11 @@ Hamlyn:
   multiplier: 30
   addition: 0.093333
   modulo: 20
-  gt_path: "../data/Hamlyn/f7/heartDepthMap_"
+  gt_path: "../data/HamlynDatasetShort/f7phantom/f7/heartDepthMap_"
+
+Kanade:
+  iteration: 10
+  width: 90
+  height: 72
 
 

@@ -16,7 +16,7 @@ Tracking::Tracking(cv::Mat &frame, Eigen::Matrix3d K, std::vector<Eigen::Vector3
     findUsableTriangles();
     
     createInitialObseration();
-    extraction = new Extractor(frame, pixel_reference_);
+    extraction = new Extractor(frame, pixel_reference_, config_);
 }
 
 Tracking::Tracking(cv::Mat ref_img, std::vector<Eigen::Vector3d> ref_vertices, std::vector<Eigen::Vector3i> ref_triangles, const YAML::Node &config)
@@ -39,7 +39,7 @@ Tracking::Tracking(cv::Mat ref_img, std::vector<Eigen::Vector3d> ref_vertices, s
     findUsableTriangles();
     
     createInitialObseration();
-    extraction = new Extractor(ref_img, pixel_reference_);
+    extraction = new Extractor(ref_img, pixel_reference_, config_);
 }
         
 
