@@ -121,9 +121,7 @@ static void visualizer(std::shared_ptr<open3d::geometry::TriangleMesh> &mesh) {
 void OptimizerDistanceOnly::run() {
 
     Eigen::Matrix3d K;
-    K <<    391.656525, 0.000000, 165.964371,
-            0.000000, 426.835144, 154.498138,
-            0.000000, 0.000000, 1.000000;
+    K = K_;
 
     int num_obs = number_observation_;
     int num_faces = number_triangles_;
@@ -244,7 +242,7 @@ void OptimizerDistanceOnly::run() {
 
             end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> duration = end-start;
-
+            std::cout << "ttttttt\n"; 
             if (verbose_)
                 std::cout << "Itertation: " << iter <<" Error: " << sqrt(cost) << " dx: " << dx / num_points << " ed: " << ed << " Time: " << duration.count() << std::endl;
 

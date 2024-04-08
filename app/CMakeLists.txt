@@ -6,6 +6,9 @@ list(APPEND EXECUTABLE_TARGETS hamlyn_f7)
 add_executable(hamlyn_f5 Phantom5/hamlyn_f5.cc)
 list(APPEND EXECUTABLE_TARGETS hamlyn_f5)
 
+add_executable(S1_real p_sft_S1_real/S1_real.cc)
+list(APPEND EXECUTABLE_TARGETS S1_real)
+
 foreach(EXECUTABLE_TARGET IN LISTS EXECUTABLE_TARGETS)
     # Set output directory for executables
     set_target_properties(${EXECUTABLE_TARGET} PROPERTIES

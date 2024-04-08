@@ -1,8 +1,8 @@
 #include "Mesh_Visualizer.h"
 
 
-Mesh_Visualizer::Mesh_Visualizer(int width, int height, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K, std::shared_ptr<open3d::geometry::TriangleMesh> mesh, bool show_only_optimised_part) :
-vertices_(vertices), triangles_(triangles), show_only_optimised_part_(show_only_optimised_part) {
+Mesh_Visualizer::Mesh_Visualizer(int width, int height, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K, std::shared_ptr<open3d::geometry::TriangleMesh> mesh, bool show_only_optimised_part, const YAML::Node &config) :
+vertices_(vertices), triangles_(triangles), show_only_optimised_part_(show_only_optimised_part), config_(config) {
     visualizer.CreateVisualizerWindow("Mesh Visualisierung", width, height);
     // mesh_ = std::make_shared<open3d::geometry::TriangleMesh>(vertices, trian);
     mesh_ = std::make_shared<open3d::geometry::TriangleMesh>(open3d::geometry::TriangleMesh());
@@ -11,6 +11,9 @@ vertices_(vertices), triangles_(triangles), show_only_optimised_part_(show_only_
     // view_control = visualizer.GetViewControl();
     
     K_ = K;
+    int w_uv = config_["Visualization"]["w_uv"].as<int>();
+    int h_uv = config_["Visualization"]["h_uv"].as<int>();
+    ShouldRotate_ = config_["Visualization"]["ShouldRotate"].as<bool>();
     for (int i=0;i< triangles.size(); i++) {
         int f1 = triangles[i].x();
         int f2 = triangles[i].y();
@@ -30,9 +33,9 @@ vertices_(vertices), triangles_(triangles), show_only_optimised_part_(show_only_
     
         Eigen::Vector2d a,b,c;
 
-        a << v1.x()/360, v1.y()/288;
-        b << v2.x()/360, v2.y()/288;
-        c << v3.x()/360, v3.y()/288;
+        a << v1.x()/w_uv, v1.y()/h_uv;
+        b << v2.x()/w_uv, v2.y()/h_uv;
+        c << v3.x()/w_uv, v3.y()/h_uv;
 
        
         
@@ -135,9 +138,9 @@ void Mesh_Visualizer::UpdateMesh(cv::Mat &frame, std::vector<Eigen::Vector3d> &v
     
         Eigen::Vector2d a,b,c;
 
-        a << v1.x()/360, v1.y()/288;
-        b << v2.x()/360, v2.y()/288;
-        c << v3.x()/360, v3.y()/288;
+        a << v1.x()/frame.cols, v1.y()/frame.rows;
+        b << v2.x()/frame.cols, v2.y()/frame.rows;
+        c << v3.x()/frame.cols, v3.y()/frame.rows;
         
         uv_coordinates_.push_back(a);
         uv_coordinates_.push_back(b);
@@ -154,8 +157,8 @@ void Mesh_Visualizer::UpdateMesh(cv::Mat &frame, std::vector<Eigen::Vector3d> &v
         mesh_->RemoveVerticesByMask(usable_vertices_);
     
     
-
-    mesh_->Rotate(rotation_matrix,t);
+    if (ShouldRotate_)
+        mesh_->Rotate(rotation_matrix,t);
 
     auto lines = std::make_shared<open3d::geometry::LineSet>();
     for (const auto& triangle : mesh_->triangles_) {

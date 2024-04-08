@@ -19,7 +19,7 @@ System::System(std::vector<Eigen::Vector3i> ref_triangles, std::vector<Eigen::Ve
     tracking_->set_MeshMap(map_);
     map_->setTracking(tracking_);
     
-    viewer_ = new Mesh_Visualizer(config["Visualization"]["width"].as<int>(), config["Visualization"]["height"].as<int>(), ref_vertices_, ref_triangles_, K, mesh_, config["Visualization"]["show_only_optimised_part"].as<bool>());
+    viewer_ = new Mesh_Visualizer(config["Visualization"]["width"].as<int>(), config["Visualization"]["height"].as<int>(), ref_vertices_, ref_triangles_, K, mesh_, config["Visualization"]["show_only_optimised_part"].as<bool>(), config_);
     viewer_->initImageParams(ref_img, tracking_->usable_triangles_, tracking_->usable_vertices_);
     
 }
@@ -28,6 +28,6 @@ System::System(std::vector<Eigen::Vector3i> ref_triangles, std::vector<Eigen::Ve
 void System::monocular_feed(cv::Mat &img) {
     tracking_->track(img);
     map_->unordered_map();
-    gt_->compareWithGroundTruth(map_->getVertices(), map_->getTriangles());
+    // gt_->compareWithGroundTruth(map_->getVertices(), map_->getTriangles());
     viewer_->UpdateMesh(img, map_->getVertices(), map_->getTriangles());
 }

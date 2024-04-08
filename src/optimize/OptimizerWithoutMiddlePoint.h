@@ -20,7 +20,7 @@ struct OptimizerWithoutMiddlePoint_sba_crsm
 
 class OptimizerWithoutMiddlePoint {
     public:
-        OptimizerWithoutMiddlePoint(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, bool verbose);
+        OptimizerWithoutMiddlePoint(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, bool verbose, Eigen::Matrix3d K);
 
         void setParamater(double *observation, std::unordered_map<int,int> &unordered_mapping_vertices, std::unordered_map<int,int> &unordered_mapping_triangles, int number_vertices, int number_triangles, int number_observation);
         void initialize();
@@ -89,11 +89,11 @@ class OptimizerWithoutMiddlePoint {
 
 	    double* Ex_;
 	    int nMaxS_;	//maximum non-zero element in S matrix 
-
+        Eigen::Matrix3d K_;
 
 };
 
-OptimizerWithoutMiddlePoint::OptimizerWithoutMiddlePoint(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, bool verbose) : max_iteration_(max_iteration), e_vertices_(vertices), e_triangles_(triangles), verbose_(verbose) {
+OptimizerWithoutMiddlePoint::OptimizerWithoutMiddlePoint(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, bool verbose, Eigen::Matrix3d K) : K_(K), max_iteration_(max_iteration), e_vertices_(vertices), e_triangles_(triangles), verbose_(verbose) {
     // create reference
     for(int i=0; i< e_vertices_.size(); i++)
         e_reference_.push_back(e_vertices_[i]);
@@ -107,9 +107,7 @@ void OptimizerWithoutMiddlePoint::getVertices(std::vector<Eigen::Vector3d> &vert
 void OptimizerWithoutMiddlePoint::run() {
 
     Eigen::Matrix3d K;
-    K <<    391.656525, 0.000000, 165.964371,
-            0.000000, 426.835144, 154.498138,
-            0.000000, 0.000000, 1.000000;
+    K = K_;
 
     int num_obs = number_observation_;
     int num_faces = number_triangles_;
@@ -207,6 +205,7 @@ void OptimizerWithoutMiddlePoint::run() {
             cost /= ((num_obs*2) + (num_faces*3));
             end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> duration = end-start;
+            std::cout << "haha\n";
             if(verbose_)
                 std::cout << "Itertation: " << iter <<" Error: " << sqrt(cost) << " dx: " << dx / num_points <<" er: " << er << " ed: " << ed << " Time: " << duration.count() << std::endl;
 

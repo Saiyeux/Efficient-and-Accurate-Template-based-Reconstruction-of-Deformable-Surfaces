@@ -20,7 +20,7 @@ struct sba_crsm
 
 class Optimizer {
     public:
-        Optimizer(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, bool verbose);
+        Optimizer(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, bool verbose, Eigen::Matrix3d K);
 
         void setParamater(double *observation, std::unordered_map<int,int> &unordered_mapping_vertices, std::unordered_map<int,int> &unordered_mapping_triangles, int number_vertices, int number_triangles, int number_observation);
         void initialize();
@@ -89,11 +89,12 @@ class Optimizer {
 
 	    double* Ex_;
 	    int nMaxS_;	//maximum non-zero element in S matrix 
+        Eigen::Matrix3d K_;
 
 
 };
 
-Optimizer::Optimizer(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, bool verbose) : verbose_(verbose), max_iteration_(max_iteration), e_vertices_(vertices), e_triangles_(triangles) {
+Optimizer::Optimizer(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, bool verbose, Eigen::Matrix3d K) : K_(K), verbose_(verbose), max_iteration_(max_iteration), e_vertices_(vertices), e_triangles_(triangles) {
     // create reference
     for(int i=0; i< e_vertices_.size(); i++)
         e_reference_.push_back(e_vertices_[i]);
@@ -107,9 +108,7 @@ void Optimizer::getVertices(std::vector<Eigen::Vector3d> &vertices) {
 void Optimizer::run() {
 
     Eigen::Matrix3d K;
-    K <<    391.656525, 0.000000, 165.964371,
-            0.000000, 426.835144, 154.498138,
-            0.000000, 0.000000, 1.000000;
+    K = K_;
 
     int num_obs = number_observation_;
     int num_faces = number_triangles_;

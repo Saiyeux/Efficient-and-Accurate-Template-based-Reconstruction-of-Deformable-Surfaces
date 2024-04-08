@@ -140,10 +140,12 @@ void Tracking::findUsableVerticies() {
         double v = fy_*y/z + cy_;
         if((u >= config_["Preprocessing"]["width_min"].as<int>()) && 
         (v >= config_["Preprocessing"]["height_min"].as<int>()) && 
-        (u < config_["Preprocessing"]["width_max"].as<int>()) && 
-        (v < config_["Preprocessing"]["height_max"].as<int>()) && (mask_.at<uchar>(int(v),int(u)) == 255)) {
+        (u <= config_["Preprocessing"]["width_max"].as<int>()) && 
+        (v <= config_["Preprocessing"]["height_max"].as<int>()) && (mask_.at<uchar>(int(v),int(u)) == 255)) {
             isPointUsable = true;
-        } 
+        }
+        if(!config_["Preprocessing"]["create_mask"].as<bool>())
+            isPointUsable = true;
         usable_vertices_.push_back(isPointUsable);
     }
 }
