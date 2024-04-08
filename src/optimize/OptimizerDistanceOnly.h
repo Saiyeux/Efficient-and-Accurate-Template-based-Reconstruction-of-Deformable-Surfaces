@@ -242,7 +242,7 @@ void OptimizerDistanceOnly::run() {
 
             end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> duration = end-start;
-            std::cout << "ttttttt\n"; 
+            // std::cout << "ttttttt\n"; 
             if (verbose_)
                 std::cout << "Itertation: " << iter <<" Error: " << sqrt(cost) << " dx: " << dx / num_points << " ed: " << ed << " Time: " << duration.count() << std::endl;
 

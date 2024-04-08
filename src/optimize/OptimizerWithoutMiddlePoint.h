@@ -205,7 +205,7 @@ void OptimizerWithoutMiddlePoint::run() {
             cost /= ((num_obs*2) + (num_faces*3));
             end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> duration = end-start;
-            std::cout << "haha\n";
+            // std::cout << "haha\n";
             if(verbose_)
                 std::cout << "Itertation: " << iter <<" Error: " << sqrt(cost) << " dx: " << dx / num_points <<" er: " << er << " ed: " << ed << " Time: " << duration.count() << std::endl;
 

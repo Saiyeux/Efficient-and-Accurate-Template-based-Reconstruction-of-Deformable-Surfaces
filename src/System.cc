@@ -28,6 +28,6 @@ System::System(std::vector<Eigen::Vector3i> ref_triangles, std::vector<Eigen::Ve
 void System::monocular_feed(cv::Mat &img) {
     tracking_->track(img);
     map_->unordered_map();
-    // gt_->compareWithGroundTruth(map_->getVertices(), map_->getTriangles());
+    gt_->compareWithGroundTruth(map_->getVertices(), map_->getTriangles());
     viewer_->UpdateMesh(img, map_->getVertices(), map_->getTriangles());
 }

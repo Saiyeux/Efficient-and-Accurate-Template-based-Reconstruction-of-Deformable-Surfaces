@@ -2,7 +2,7 @@
 // #include "Tracking.h"
 // #include "viewer/Mesh_Visualizer.h"
 #include "System.h"
-#include "GT_compare/HamlynGT.h"
+#include "GT_compare/SfTGT.h"
 
 #include <opencv2/opencv.hpp>
 #include <Eigen/Core>
@@ -27,10 +27,10 @@ int main() {
    
 
     // Config
-    const YAML::Node config = YAML::LoadFile("../app/p_sft_S1_real/config.yaml");
+    const YAML::Node config = YAML::LoadFile("../app/p_sft_S3_real/config.yaml");
     
     // Todo
-    HamlynGT* gt = new HamlynGT(config);
+    SfTGT* gt = new SfTGT(config);
     // Creation of a mesh
     std::string img_file_path = config["System"]["video_file_path"].as<std::string>();
     // std::string obj_file_path = config["System"]["reference_file_path"].as<std::string>();
@@ -47,11 +47,11 @@ int main() {
     // open3d::visualization::DrawGeometries({mesh});
     std::vector<Eigen::Vector3d> vertices = mesh->vertices_;
     std::vector<Eigen::Vector3i> triangles = mesh->triangles_;
-    auto test = std::make_shared<open3d::geometry::PointCloud>();
-    open3d::io::ReadPointCloud("/home/anonym/Schreibtisch/PhD/code/Sparse Template based Reconstruction/data/phi_SfT/real/S1/point_clouds/point_cloud_000.obj", *test);
+    // auto test = std::make_shared<open3d::geometry::PointCloud>();
+    // open3d::io::ReadPointCloud("/home/anonym/Schreibtisch/PhD/code/Sparse Template based Reconstruction/data/phi_SfT/real/S1/point_clouds/point_cloud_000.ply", *test);
     // auto point_cloud_ptr = open3d::io::CreatePointCloudFromFile("/home/anonym/Schreibtisch/PhD/code/Sparse Template based Reconstruction/data/phi_SfT/real/S1/point_clouds/point_cloud_000.ply");
     // std::cout << test->points_.size() << std::endl;
-    open3d::visualization::DrawGeometries({test});
+    // open3d::visualization::DrawGeometries({test});
     // std::shared_ptr<open3d::geometry::TriangleMesh> mesh_temp;
     // mesh_temp->vertices_ = vertices;
     // mesh_temp->triangles_ = triangles;
@@ -61,10 +61,12 @@ int main() {
     // cv::rotate(frame, frame, cv::ROTATE_180);
     System *sys = new System(triangles, vertices, frame, config, mesh, gt); 
 
+    int max_number = config["Phi_SfT"]["max_number_frames"].as<int>();
+
     bool end = false;
     while(!end){
         frame = cv::imread(img_file_path + "000.png", cv::IMREAD_COLOR);
-        for (int num_img=1;num_img < 50; num_img++) {
+        for (int num_img=1;num_img < max_number; num_img++) {
             
             
             sys->monocular_feed(frame);

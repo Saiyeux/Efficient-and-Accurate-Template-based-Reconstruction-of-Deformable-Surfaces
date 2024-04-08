@@ -6,8 +6,32 @@ list(APPEND EXECUTABLE_TARGETS hamlyn_f7)
 add_executable(hamlyn_f5 Phantom5/hamlyn_f5.cc)
 list(APPEND EXECUTABLE_TARGETS hamlyn_f5)
 
-add_executable(S1_real p_sft_S1_real/S1_real.cc)
+add_executable(S1_real p_sft_S1_real/real.cc)
 list(APPEND EXECUTABLE_TARGETS S1_real)
+
+add_executable(S2_real p_sft_S2_real/real.cc)
+list(APPEND EXECUTABLE_TARGETS S2_real)
+
+add_executable(S3_real p_sft_S3_real/real.cc)
+list(APPEND EXECUTABLE_TARGETS S3_real)
+
+add_executable(S4_real p_sft_S4_real/real.cc)
+list(APPEND EXECUTABLE_TARGETS S4_real)
+
+add_executable(S5_real p_sft_S5_real/real.cc)
+list(APPEND EXECUTABLE_TARGETS S5_real)
+
+add_executable(S6_real p_sft_S6_real/real.cc)
+list(APPEND EXECUTABLE_TARGETS S6_real)
+
+add_executable(S7_real p_sft_S7_real/real.cc)
+list(APPEND EXECUTABLE_TARGETS S7_real)
+
+add_executable(S8_real p_sft_S8_real/real.cc)
+list(APPEND EXECUTABLE_TARGETS S8_real)
+
+add_executable(S9_real p_sft_S9_real/real.cc)
+list(APPEND EXECUTABLE_TARGETS S9_real)
 
 foreach(EXECUTABLE_TARGET IN LISTS EXECUTABLE_TARGETS)
     # Set output directory for executables
