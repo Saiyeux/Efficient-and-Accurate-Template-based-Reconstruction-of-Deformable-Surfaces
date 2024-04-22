@@ -3,7 +3,7 @@ System:
   video_file_path: "../data/phi_SfT/real/S4/rgbs/rgb_"
   reference_file_path: "../data/phi_SfT/real/S4/templates/template_mesh_final_textured.obj"
 
-  optimization_algorithm: 1
+  optimization_algorithm: 0
   # 0: normal
   # 1: Distance Only
   # 2: Normal with only the vertices as reporjection
@@ -41,13 +41,15 @@ Visualization:
  w_uv: 1920
  h_uv: 1080
  show_only_optimised_part: true
- ShouldRotate: false
+ ShouldRotate: true
 
 
 Phi_SfT:
   gt_path: "../data/phi_SfT/real/S4/point_clouds/point_cloud_"
   # simplification: 586
   max_number_frames: 36
+  only_once: true
+
 
 Kanade:
   iteration: 10

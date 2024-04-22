@@ -139,6 +139,13 @@ int main() {
     
     }        
 
+    double sum = 0;
+    for (double element : gt->all_mean_) {
+        sum += element;
+    }
+    double average = static_cast<double>(sum) / gt->all_mean_.size();
+    std::cout << "RMS: " << average << std::endl;
+
     cap.release();
     return 0;
 }

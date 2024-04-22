@@ -3,11 +3,11 @@ System:
   video_file_path: "../data/HamlynDatasetShort/f5phantom/f5_dynamic_deint_L.avi"
   reference_file_path: "../data/HamlynDatasetShort/f5phantom/f5/heartDepthMap_"
 
-  optimization_algorithm: 1
+  optimization_algorithm: 0
   # 0: normal
   # 1: Distance Only
   # 2: Normal with only the vertices as reporjection
-  verbose: true
+  verbose: false
 
 Optimizer:
   max_iteration: 10

@@ -64,6 +64,8 @@ int main() {
     int max_number = config["Phi_SfT"]["max_number_frames"].as<int>();
 
     bool end = false;
+    bool only_once = config["Phi_SfT"]["only_once"].as<bool>();
+
     while(!end){
         frame = cv::imread(img_file_path + "000.png", cv::IMREAD_COLOR);
         for (int num_img=1;num_img < max_number; num_img++) {
@@ -86,8 +88,18 @@ int main() {
             
             
         }
+
+        if(only_once)
+            break;
         
     }
+    
+    double sum = 0;
+    for (double element : gt->all_mean_) {
+        sum += element;
+    }
+    double average = static_cast<double>(sum) / gt->all_mean_.size();
+    std::cout << average << std::endl;
     
 
 

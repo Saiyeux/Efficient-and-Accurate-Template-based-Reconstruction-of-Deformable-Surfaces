@@ -27,7 +27,8 @@ void SfTGT::compareWithGroundTruth(std::vector<Eigen::Vector3d> vertices, std::v
 
     auto pc = std::make_shared<open3d::geometry::PointCloud>(); 
     // auto pc = open3d::io::CreatePointCloudFromFile(path_ + std::to_string(gt_id) + ".txt", "xyz");
-    open3d::io::ReadPointCloud("/home/anonym/Schreibtisch/PhD/code/Sparse Template based Reconstruction/data/phi_SfT/real/S1/point_clouds/point_cloud_" + result + ".ply", *pc);
+    // open3d::io::ReadPointCloud("/home/anonym/Schreibtisch/PhD/code/Sparse Template based Reconstruction/data/phi_SfT/real/S1/point_clouds/point_cloud_" + result + ".ply", *pc);
+    open3d::io::ReadPointCloud(path_ + result + ".ply", *pc);
     std::vector<Eigen::Vector3d> tmp1;
     for (int i=0;i<pc->points_.size();i++) {
         Eigen::Vector3d point = pc->points_[i];
@@ -54,7 +55,8 @@ void SfTGT::compareWithGroundTruth(std::vector<Eigen::Vector3d> vertices, std::v
     }
     mean /= values.size();
     mean = sqrt(mean);
-    std::cout << mean << " " << values.size() << std::endl;
+    all_mean_.push_back(mean);
+    std::cout << mean << std::endl;
     FrameNo_++;
     if(FrameNo_ == max_number_)
         FrameNo_ = 0;

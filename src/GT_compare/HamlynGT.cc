@@ -46,6 +46,7 @@ void HamlynGT::compareWithGroundTruth(std::vector<Eigen::Vector3d> vertices, std
     }
     mean /= values.size();
     mean = sqrt(mean);
+    all_mean_.push_back(mean);
     std::cout << mean << " " << values.size() << std::endl;
     FrameNo_++;
     
