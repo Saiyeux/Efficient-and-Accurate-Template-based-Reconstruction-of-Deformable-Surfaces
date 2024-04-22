@@ -18,20 +18,14 @@
     <li>OpenCV-4.5.0</li>
     <li>Eigen-3.3</li>
     <li>Open3D-0.18.0</li>
-    <li>Pangolin -Version Missing-</li>
+    <li>Pangolin-0.8</li>
 </ul>
 
 ## Currently working on
-- Working on a more stable feature tracking
--- SSIM for Outlier detection
-- making the surface reconstruction more robust
--- Embedded deformation?! 
-- refactoring
 - Docker implementation
 - Writing the Readme
-- preprocessing of the reference image, for better trackable feature points
-- Mesh_Visualizer -> Bad programmed and I dont know why it works. Make it proper!
-- Drawing Keypoints can be more precise! at the moment I draw all!
+-- Reference to the datasets which I used!
+- a new viewer -> Open3D Viewer isnt really interactive -> Pangolin! 
 
 ## License
 
