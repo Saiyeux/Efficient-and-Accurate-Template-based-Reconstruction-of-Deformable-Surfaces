@@ -121,7 +121,7 @@ int main() {
     
     System *sys = new System(triangles, vertices, frame, config, mesh, gt); 
     
-    
+    // int i=0;
     
     while(1) {
         if(frame.empty())
@@ -135,7 +135,8 @@ int main() {
             break;
         }
         cap >> frame;
-
+        // if(10==i++)
+        //     break;
     
     }        
 

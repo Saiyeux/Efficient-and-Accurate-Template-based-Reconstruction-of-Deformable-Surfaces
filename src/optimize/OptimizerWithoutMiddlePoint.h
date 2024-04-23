@@ -144,7 +144,9 @@ void OptimizerWithoutMiddlePoint::run() {
     //     vertices[i] += random_value*mult; 
     // }
     std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
-    for(int iter = 1; iter < max_iteration_;iter++) {
+    // std::chrono::duration<double> avg = (std::chrono::duration<double>)0.0;
+    int iter = 1;
+    for(iter = 1; iter < max_iteration_;iter++) {
         start = std::chrono::high_resolution_clock::now();
         memset( error_, 0, (((num_obs*2) + (num_faces*3))*sizeof(double) ));
         memset( V_, 0, nnz * 3 * 3 * sizeof(double));
@@ -205,15 +207,19 @@ void OptimizerWithoutMiddlePoint::run() {
             cost /= ((num_obs*2) + (num_faces*3));
             end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> duration = end-start;
+            // avg += duration;
             // std::cout << "haha\n";
             if(verbose_)
                 std::cout << "Itertation: " << iter <<" Error: " << sqrt(cost) << " dx: " << dx / num_points <<" er: " << er << " ed: " << ed << " Time: " << duration.count() << std::endl;
 
-            // if((cost < 0.000001) || (dx < 0.000001))
-            //     break;
-            if((cost < 0.00000000001) || (dx < 0.00000000001))
+            if((cost < 0.000001) || (dx < 0.000001))
                 break;
+            // if((cost < 0.00000000001) || (dx < 0.00000000001))
+            //     break;
     }
+
+    // std::cout << "avg: " << avg / ((std::chrono::duration<double>)iter) << std::endl;
+
 
     for(auto map1 : triangle_unordered_mapping_) {
         Eigen::Vector3i e_triangle = e_triangles_[map1.first];
@@ -371,49 +377,52 @@ void OptimizerWithoutMiddlePoint::setParamater(double *observation, std::unorder
 
 void OptimizerWithoutMiddlePoint::compute_reprojection_error(double *e, double *obs, double *xyz, int *faces, Eigen::Matrix3d &K, int num_obs) {
     for(int obs_id=0; obs_id < num_obs; obs_id++) {
-        double fx = K(0,0);
-        double fy = K(1,1);
-        double cx = K(0,2);
-        double cy = K(1,2);
-        //  auto it = triangle_unordered_mapping_.find(obs[obs_id * 6]); // Suche nach dem Schlüssel 2
-        // if (it != triangle_unordered_mapping_.end()) {
-        //     std::cout << "Element gefunden! Wert: " << it->second << std::endl;
-        // } else {
-        //     std::cout << "Element nicht gefunden!" << std::endl;
-        // }
-        // std::cout << obs[obs_id * 6] << " " << obs[obs_id * 6 +1] << " " << obs[obs_id * 6 +2] << " " 
-        // << obs[obs_id * 6 +3] << " " << obs[obs_id * 6 + 4] << " " << obs[obs_id * 6 + 5] << " " << std::endl;
-        int face_id = triangle_unordered_mapping_[obs[obs_id * 6]];
-        int f1 = faces[face_id*3];
-        int f2 = faces[face_id*3+1];
-        int f3 = faces[face_id*3+2];
-
-        // double v1[] = {xyz[f1*3],xyz[f1*3+1],xyz[f1*3+2]};
-        double *v1= &xyz[f1*3];
-        // double v2 = {xyz[f2*3],xyz[f2*3+1],xyz[f2*3+2]};
-        double *v2 = &xyz[f2*3];
-        // double v3 = {xyz[f3*3],xyz[f3*3+1],xyz[f3*3+2]};
-        double *v3 = &xyz[f3*3];
-
         double alpha = obs[obs_id * 6 + 3];
         double beta = obs[obs_id * 6 + 4];
         double gamma = obs[obs_id * 6 + 5];
 
-        double z_u = obs[obs_id * 6 + 1];
-        double z_v = obs[obs_id * 6 + 2];
-
-        //  std::cout << v1[0] << " " << v1[1] << " " << v1[2] << std::endl;
-        
-        double p[3] = {v1[0] * alpha + v2[0]*beta + v3[0]*gamma,
-                       v1[1] * alpha + v2[1]*beta + v3[1]*gamma,
-                       v1[2] * alpha + v2[2]*beta + v3[2]*gamma};
-
-        double a = fx * p[0] / p[2] + cx;
-        double b = fy * p[1] / p[2] + cy;
-        double e_u = z_u - (fx * p[0] / p[2] + cx);
-        double e_v = z_v - (fy * p[1] / p[2] + cy);
-
         if((alpha >= 0.99) || (beta >= 0.99) || (gamma >= 0.99)){
+            double fx = K(0,0);
+            double fy = K(1,1);
+            double cx = K(0,2);
+            double cy = K(1,2);
+            //  auto it = triangle_unordered_mapping_.find(obs[obs_id * 6]); // Suche nach dem Schlüssel 2
+            // if (it != triangle_unordered_mapping_.end()) {
+            //     std::cout << "Element gefunden! Wert: " << it->second << std::endl;
+            // } else {
+            //     std::cout << "Element nicht gefunden!" << std::endl;
+            // }
+            // std::cout << obs[obs_id * 6] << " " << obs[obs_id * 6 +1] << " " << obs[obs_id * 6 +2] << " " 
+            // << obs[obs_id * 6 +3] << " " << obs[obs_id * 6 + 4] << " " << obs[obs_id * 6 + 5] << " " << std::endl;
+            int face_id = triangle_unordered_mapping_[obs[obs_id * 6]];
+            int f1 = faces[face_id*3];
+            int f2 = faces[face_id*3+1];
+            int f3 = faces[face_id*3+2];
+
+            // double v1[] = {xyz[f1*3],xyz[f1*3+1],xyz[f1*3+2]};
+            double *v1= &xyz[f1*3];
+            // double v2 = {xyz[f2*3],xyz[f2*3+1],xyz[f2*3+2]};
+            double *v2 = &xyz[f2*3];
+            // double v3 = {xyz[f3*3],xyz[f3*3+1],xyz[f3*3+2]};
+            double *v3 = &xyz[f3*3];
+
+            
+
+            double z_u = obs[obs_id * 6 + 1];
+            double z_v = obs[obs_id * 6 + 2];
+
+            //  std::cout << v1[0] << " " << v1[1] << " " << v1[2] << std::endl;
+            
+            double p[3] = {v1[0] * alpha + v2[0]*beta + v3[0]*gamma,
+                        v1[1] * alpha + v2[1]*beta + v3[1]*gamma,
+                        v1[2] * alpha + v2[2]*beta + v3[2]*gamma};
+
+            double a = fx * p[0] / p[2] + cx;
+            double b = fy * p[1] / p[2] + cy;
+            double e_u = z_u - (fx * p[0] / p[2] + cx);
+            double e_v = z_v - (fy * p[1] / p[2] + cy);
+
+        
             e[obs_id*2 + 0] = e_u;
             e[obs_id*2 + 1] = e_v;
         }else {
@@ -763,6 +772,13 @@ void OptimizerWithoutMiddlePoint::storeInV(double* V, int idx1, int idx2, double
 
 void OptimizerWithoutMiddlePoint::compute_reprojection_jacobian(double *V, double *g, double *error, double *obs, double *xyz, int *faces, Eigen::Matrix3d K, int num_obs, OptimizerWithoutMiddlePoint_sba_crsm& Sidxij) {
     for(int obs_id=0; obs_id < num_obs; obs_id++) {
+        double alpha = obs[obs_id * 6 + 3];
+        double beta = obs[obs_id * 6 + 4];
+        double gamma = obs[obs_id * 6 + 5];
+
+        if ((alpha < 0.99) && (beta < 0.99) && (gamma < 0.99))
+            continue;
+
         double fx = K(0,0);
         double fy = K(1,1);
         double cx = K(0,2);
@@ -778,12 +794,7 @@ void OptimizerWithoutMiddlePoint::compute_reprojection_jacobian(double *V, doubl
         double *v2 = &xyz[f2*3];
         double *v3 = &xyz[f3*3];
 
-        double alpha = obs[obs_id * 6 + 3];
-        double beta = obs[obs_id * 6 + 4];
-        double gamma = obs[obs_id * 6 + 5];
-
-        if ((alpha < 0.99) && (beta < 0.99) && (gamma < 0.99))
-            continue;
+        
 
         double x = v1[0] * alpha + v2[0]*beta + v3[0]*gamma;
         double y = v1[1] * alpha + v2[1]*beta + v3[1]*gamma;

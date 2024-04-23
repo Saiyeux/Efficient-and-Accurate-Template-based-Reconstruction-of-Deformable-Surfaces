@@ -160,7 +160,9 @@ void OptimizerDistanceOnly::run() {
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
     double ed = 0;
-    for(int iter = 1; iter < max_iteration_;iter++) {
+    // std::chrono::duration<double> avg = (std::chrono::duration<double>)0.0;
+    int iter = 1;
+    for(iter = 1; iter < max_iteration_;iter++) {
         start = std::chrono::high_resolution_clock::now();
         memset( error_, 0, (( (num_faces*3))*sizeof(double) ));
         memset( V_, 0, nnz  * sizeof(double));
@@ -242,17 +244,21 @@ void OptimizerDistanceOnly::run() {
 
             end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> duration = end-start;
+            // avg += duration;
             // std::cout << "ttttttt\n"; 
             if (verbose_)
                 std::cout << "Itertation: " << iter <<" Error: " << sqrt(cost) << " dx: " << dx / num_points << " ed: " << ed << " Time: " << duration.count() << std::endl;
 
-            // if((cost < 0.000001) || (dx < 0.000001))
-            //     break;
-            if((cost < 0.00000000001) || (dx < 0.00000000001)){
-                // cv::waitKey(0);
+            if((cost < 0.000001) || (dx < 0.000001))
                 break;
-            }
+            // if((cost < 0.00000000001) || (dx < 0.00000000001)){
+            //     // cv::waitKey(0);
+            //     break;
+            // }
     }
+    // double dd = avg.count() / iter;
+    // std::cout << "avg: " << dd << std::endl;
+
 
     // if (ed > 100000){
     //     for(int i = 0; i < num_points; i++) {

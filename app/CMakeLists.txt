@@ -1,5 +1,8 @@
 set(EXECUTABLE_TARGETS "")
 
+add_executable(colon_1 colon_1/main.cc)
+list(APPEND EXECUTABLE_TARGETS colon_1)
+
 add_executable(hamlyn_f7 Phantom7/hamlyn_f7.cc)
 list(APPEND EXECUTABLE_TARGETS hamlyn_f7)
 
@@ -56,8 +59,8 @@ foreach(EXECUTABLE_TARGET IN LISTS EXECUTABLE_TARGETS)
                                 opencv_features2d
                                 opencv_calib3d
                           Open3D::Open3D
-                          yaml-cpp
-                          opencv_imgcodecs
-                          opencv_videoio)
+                          yaml-cpp)
+                        #   opencv_imgcodecs
+                        #   opencv_videoio)
 
 endforeach()

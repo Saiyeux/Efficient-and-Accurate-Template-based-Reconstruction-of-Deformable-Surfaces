@@ -1,5 +1,5 @@
 System:
-  video_file_path: "../data/HamlynDatasetShort/f7phantom/f7_dynamic_deint_L.avi"
+  video_file_path: "../data/ColonoscopyDataset/rgb/FWD_"
   reference_file_path: "../data/HamlynDatasetShort/f7phantom/f7/heartDepthMap_"
 
   optimization_algorithm: 2
@@ -12,12 +12,12 @@ Optimizer:
   max_iteration: 10
 
 Image:
-  width: 360
-  height: 288
-  fx: 391.656525
-  fy: 426.835144
-  cx: 165.964371
-  cy: 154.498138
+  width: 512
+  height: 512
+  fx: 2.162177 
+  fy: 2.162177 
+  cx: 0
+  cy: 0
 
   k1: 0.0
   k2: 0.0
@@ -26,12 +26,12 @@ Image:
   k3: 0.0
 
 Preprocessing:
-  create_mask: true
+  create_mask: false
   brightness_threshold: 40
   width_min: 2
-  width_max: 360
+  width_max: 512
   height_min: 5
-  height_max: 288
+  height_max: 512
 # first 40, then 70, then 60
 
 Visualization:
@@ -48,6 +48,10 @@ GT_Mesh:
   Poisson_depth: 9
   Poisson_width: 0.1
   simplification: 4000
+
+colonoscopy:
+  max_number_frames: 29
+  only_once: false
 
 Hamlyn:
   FPS: 25
