@@ -2,7 +2,7 @@ System:
   video_file_path: "../data/ColonoscopyDataset/rgb/FWD_"
   reference_file_path: "../data/HamlynDatasetShort/f7phantom/f7/heartDepthMap_"
 
-  optimization_algorithm: 2
+  optimization_algorithm: 1
   # 0: normal
   # 1: Distance Only
   # 2: Normal with only the vertices as reporjection
