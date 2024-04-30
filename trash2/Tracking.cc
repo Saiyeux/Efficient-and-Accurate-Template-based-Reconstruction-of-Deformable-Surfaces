@@ -1,5 +1,5 @@
 #include "Tracking.h"
-#include "data/Extractor.h"
+#include "Extractor.h"
 #include "MeshMap.h"
 #include <iostream>
 #include <algorithm>

@@ -3,12 +3,11 @@
 // #include "viewer/Mesh_Visualizer.h"
 #include "System.h"
 #include "GT_compare/SfTGT.h"
-
+#include "utils.h"
 #include <opencv2/opencv.hpp>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-#include <open3d/Open3D.h>
-#include <open3d/t/geometry/RaycastingScene.h>
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -20,7 +19,7 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
-
+using namespace stbr;
 
 int main() {
     // frame_id
@@ -41,13 +40,10 @@ int main() {
     // cap >> frame;
     std::shared_ptr<open3d::geometry::TriangleMesh> mesh;
     // mesh = createRefMesh(config, gt_id);
-    mesh = open3d::io::CreateMeshFromFile(config["System"]["reference_file_path"].as<std::string>());
-    // std::cout << mesh->triangles_.size() << std::endl; exit(1);
-    // mesh = mesh->SimplifyQuadricDecimation(config["Phi_SfT"]["simplification"].as<int>(), std::numeric_limits<double>::infinity(), 1.0);
-    // open3d::visualization::DrawGeometries({mesh});
-    std::vector<Eigen::Vector3d> vertices = mesh->vertices_;
-    std::vector<Eigen::Vector3i> triangles = mesh->triangles_;
-    // auto test = std::make_shared<open3d::geometry::PointCloud>();
+    std::vector<Eigen::Vector3d> vertices;
+    std::vector<Eigen::Vector3i> triangles;
+    utils::getMesh(config["System"]["reference_file_path"].as<std::string>(), vertices, triangles);
+     // auto test = std::make_shared<open3d::geometry::PointCloud>();
     // open3d::io::ReadPointCloud("/home/anonym/Schreibtisch/PhD/code/Sparse Template based Reconstruction/data/phi_SfT/real/S1/point_clouds/point_cloud_000.ply", *test);
     // auto point_cloud_ptr = open3d::io::CreatePointCloudFromFile("/home/anonym/Schreibtisch/PhD/code/Sparse Template based Reconstruction/data/phi_SfT/real/S1/point_clouds/point_cloud_000.ply");
     // std::cout << test->points_.size() << std::endl;
@@ -59,7 +55,7 @@ int main() {
 
     frame = cv::imread(img_file_path + "000.png", cv::IMREAD_COLOR);
     // cv::rotate(frame, frame, cv::ROTATE_180);
-    System *sys = new System(triangles, vertices, frame, config, mesh, gt);
+    System *sys = new System(triangles, vertices, frame, config, gt);
 
     int max_number = config["Phi_SfT"]["max_number_frames"].as<int>(); 
 

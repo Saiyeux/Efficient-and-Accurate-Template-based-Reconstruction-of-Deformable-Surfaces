@@ -1,3 +1,5 @@
+#ifndef MESHMAP_H
+#define MESHMAP_H
 
 #include <opencv2/opencv.hpp>
 #include <Eigen/Core>
@@ -47,3 +49,5 @@ class MeshMap {
         std::unordered_map<int, int> vertices_unordered_mapping_;
         
 };
+
+#endif

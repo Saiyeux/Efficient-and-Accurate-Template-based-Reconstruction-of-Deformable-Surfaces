@@ -7,7 +7,7 @@ System:
   # 0: normal
   # 1: Distance Only
   # 2: Normal with only the vertices as reporjection
-  verbose: false
+  verbose: true
 
 Optimizer:
   max_iteration: 10

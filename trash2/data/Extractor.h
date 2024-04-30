@@ -1,3 +1,6 @@
+#ifndef EXTRACTOR_H
+#define EXTRACTOR_H
+
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <yaml-cpp/yaml.h>
@@ -18,3 +21,5 @@ class Extractor {
         int lk_width_ = 100;
         int lk_height_ = 100;
 };
+
+#endif

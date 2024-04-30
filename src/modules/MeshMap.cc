@@ -1,11 +1,11 @@
 #include "MeshMap.h"
 #include "Tracking.h"
-#include "optimize/Optimizer.h"
-#include "optimize/OptimizerWithoutMiddlePoint.h"
-#include "optimize/OptimizerDistanceOnly.h"
+#include "Optimizer.h"
+#include "OptimizerWithoutMiddlePoint.h"
+#include "OptimizerDistanceOnly.h"
 
 
-
+namespace stbr {
 
 MeshMap::MeshMap(std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, Eigen::Matrix3d K, int max_iteration, int optimization_algorithm, bool verbose): K_(K), fx_(K(0,0)), fy_(K(1,1)), cx_(K(0,2)), cy_(K(1,2)),
         vertices_(vertices), triangles_(triangles), number_triangles_(triangles.size()), number_vertices_(vertices.size()), optimization_algorithm_(optimization_algorithm) {
@@ -138,4 +138,5 @@ void MeshMap::unordered_map() {
         optimizeWithout_->run();
         optimizeWithout_->getVertices(vertices_);
     }
+}
 }

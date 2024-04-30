@@ -41,7 +41,7 @@ Visualization:
  w_uv: 1920
  h_uv: 1080
  show_only_optimised_part: false
- ShouldRotate: true
+ ShouldRotate: false
 
 
 Phi_SfT:

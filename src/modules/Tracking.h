@@ -1,7 +1,12 @@
+#ifndef TRACKING_H
+#define TRACKING_H
+
 #include <opencv2/opencv.hpp>
 #include <Eigen/Core>
 #include <vector>
 #include <yaml-cpp/yaml.h>
+
+namespace stbr {
 
 class MeshMap;
 class Extractor;
@@ -59,3 +64,5 @@ class Tracking {
 
         
 };
+} // Namespace
+#endif //TRACKING_H
