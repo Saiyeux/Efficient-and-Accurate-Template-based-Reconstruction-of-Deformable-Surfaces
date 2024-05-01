@@ -382,17 +382,20 @@ void OptimizerDistanceOnly::initialize() {
         double *vertex, *vertex1;
         if(int(alpha) == 1) {
             vertex = e_vertices_[e_triangles_[face_id].x()].data();
+            // vertex = e_reference_[e_triangles_[face_id].x()].data();
             vertex1 = e_reference_[e_triangles_[face_id].x()].data();
             // tmp = e_triangles_[face_id].x();
         } else if (int(beta) == 1)
         {
             vertex = e_vertices_[e_triangles_[face_id].y()].data();
+            // vertex = e_reference_[e_triangles_[face_id].y()].data();
             vertex1 = e_reference_[e_triangles_[face_id].y()].data();
             // tmp = e_triangles_[face_id].y();
 
         } else if (int(gamma) == 1)
         {
             vertex = e_vertices_[e_triangles_[face_id].z()].data();
+            // vertex = e_reference_[e_triangles_[face_id].z()].data();
             vertex1 = e_reference_[e_triangles_[face_id].z()].data();
             // tmp = e_triangles_[face_id].z();
     
@@ -428,6 +431,8 @@ void OptimizerDistanceOnly::initialize() {
 
      for(auto& unordered_map: vertices_unordered_mapping_) {
         Eigen::Vector3d vertex = e_vertices_[unordered_map.first];
+        // Eigen::Vector3d vertex = e_reference_[unordered_map.first];
+        // Eigen::Vector3d vertex = e_reference_[unordered_map.first];
         Eigen::Vector3d ref_vertex = e_reference_[unordered_map.first];
         // std::cout << num_vertices << std::endl;
         int id = unordered_map.second;

@@ -291,7 +291,8 @@ void Optimizer::initialize() {
     memset( vertices_, 0, number_vertices_*3*sizeof(double));
 
      for(auto& unordered_map: vertices_unordered_mapping_) {
-        Eigen::Vector3d vertex = e_vertices_[unordered_map.first];
+        // Eigen::Vector3d vertex = e_vertices_[unordered_map.first];
+        Eigen::Vector3d vertex = e_reference_[unordered_map.first];
         Eigen::Vector3d ref_vertex = e_reference_[unordered_map.first];
         // std::cout << num_vertices << std::endl;
         int id = unordered_map.second;

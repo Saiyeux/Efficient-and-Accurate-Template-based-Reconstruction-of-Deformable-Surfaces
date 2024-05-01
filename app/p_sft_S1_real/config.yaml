@@ -3,7 +3,7 @@ System:
   video_file_path: "../data/phi_SfT/real/S1/rgbs/rgb_"
   reference_file_path: "../data/phi_SfT/real/S1/templates/template_mesh_final_textured.obj"
 
-  optimization_algorithm: 1
+  optimization_algorithm: 0
   # 0: normal
   # 1: Distance Only
   # 2: Normal with only the vertices as reporjection
