@@ -18,14 +18,16 @@
     <li>OpenCV-4.5.0</li>
     <li>Eigen-3.3</li>
     <li>Open3D-0.18.0</li>
-    <li>Pangolin-0.8</li>
+    <li>Pangolin-0.9</li>
 </ul>
 
 ## Currently working on
 - Docker implementation
 - Writing the Readme
 -- Reference to the datasets which I used!
-- a new viewer -> Open3D Viewer isnt really interactive -> Pangolin! 
+- using von spdlog!
+- refactoring of optimization
+- commenting
 
 ## License
 
