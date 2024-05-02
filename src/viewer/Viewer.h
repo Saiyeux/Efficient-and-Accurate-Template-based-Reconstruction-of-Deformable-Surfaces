@@ -48,6 +48,7 @@ class MeshViewer {
         void draw_camera() const;
         void draw_frustum() const;
         void draw_current_mesh();
+        void draw_current_gt_pc();
 
         int width_ = 1080;
         int height_ = 720;

@@ -29,4 +29,40 @@ void database::getTexture(cv::Mat &texture) {
     std::lock_guard<std::mutex> lock(mtx_texture_);
     texture = texture_;
 }
+
+void database::setPause() {
+    std::lock_guard<std::mutex> lock(mtx_pause_);
+    pause_ = true;
+}
+
+void database::setUnpause() {
+    std::lock_guard<std::mutex> lock(mtx_pause_);
+    pause_ = false;
+}
+
+bool database::isPause() {
+    std::lock_guard<std::mutex> lock(mtx_pause_);
+    return pause_;
+}
+
+void database::setTerminate() {
+    std::lock_guard<std::mutex> lock(mtx_terminate_);
+    terminate_ = true;
+}
+
+bool database::isTerminated() {
+    std::lock_guard<std::mutex> lock(mtx_terminate_);
+    return terminate_;
+}
+
+void database::setGT(std::vector<Eigen::Vector3d> gt_pc) {
+    std::lock_guard<std::mutex> lock(mtx_gt_);
+    gt_pc_ = gt_pc;
+}
+
+void database::getGT(std::vector<Eigen::Vector3d> &gt_pc) {
+    std::lock_guard<std::mutex> lock(mtx_gt_);
+    gt_pc = gt_pc_;
+}
+
 } // namespace

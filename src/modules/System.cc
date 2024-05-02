@@ -7,6 +7,9 @@
 // #include "viewer/MeshViewer.h"
 // #include "MeshViewer.h"
 #include "database.h"
+
+#include <chrono>
+
 namespace stbr {
 System::System() {
     
@@ -37,18 +40,29 @@ System::System(std::vector<Eigen::Vector3i> ref_triangles, std::vector<Eigen::Ve
     // viewer_ = new Viewer::MeshViewer();
     // viewer_ = new MeshViewer::MeshViewer();
     // viewer_->initImageParams(ref_img, tracking_->usable_triangles_, tracking_->usable_vertices_);
-    std::cout << "ini\n";
+    // std::cout << "ini\n";
     // viewer_->run();
     viewing_thread_ = std::unique_ptr<std::thread>(new std::thread(&Viewer::MeshViewer::run, viewer_));
 }
 
 
-void System::monocular_feed(cv::Mat &img) {
+bool System::monocular_feed(cv::Mat &img) {
     tracking_->track(img);
     map_->unordered_map();
-    gt_->compareWithGroundTruth(map_->getVertices(), map_->getTriangles());
+    gt_->compareWithGroundTruth(map_->getVertices(), map_->getTriangles(), gt_pc_);
     db_->setTexture(img);
     db_->setVertices(map_->getVertices());
+    db_->setGT(gt_pc_);
+
+    // isTerminated();
+
+    while(db_->isPause()) {
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
+        if(db_->isTerminated())
+            return true;
+    }
+
+    return db_->isTerminated();
     // viewer_->UpdateMesh(img, map_->getVertices(), map_->getTriangles());
 }
 

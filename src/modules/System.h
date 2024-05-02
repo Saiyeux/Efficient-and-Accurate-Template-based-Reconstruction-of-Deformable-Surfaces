@@ -23,14 +23,18 @@ public:
     System();
     System(std::vector<Eigen::Vector3i> ref_triangles, std::vector<Eigen::Vector3d> ref_vertices, cv::Mat ref_img, const YAML::Node &config, GroundTruth_compare *gt);
 
-    void monocular_feed(cv::Mat &img); 
+    bool monocular_feed(cv::Mat &img); 
 
     Viewer::MeshViewer *viewer_ = nullptr;
 
 
 private:
+    bool terminate_requested();
+
+    bool isTerminated_ = false;
     std::vector<Eigen::Vector3i> ref_triangles_;
     std::vector<Eigen::Vector3d> ref_vertices_;
+    std::vector<Eigen::Vector3d> gt_pc_;
     cv::Mat ref_img_;
     const YAML::Node config_;
     // std::shared_ptr<open3d::geometry::TriangleMesh> mesh_ = nullptr;

@@ -26,6 +26,7 @@ void MeshViewer::create_menu_panel() {
 
 void MeshViewer::request_terminate() {
     isFinished_ = true;
+    db_->setTerminate();
 }
 
 void MeshViewer::draw_current_cam_pose() {
@@ -68,6 +69,17 @@ void MeshViewer::draw_current_mesh() {
     mDrawer->drawMesh(0.99);
 }
 
+void MeshViewer::draw_current_gt_pc() {
+    std::vector<Eigen::Vector3d> points;
+    std::vector<Eigen::Vector3f> pts;
+    db_->getGT(points);
+    
+    for(int i=0; i < points.size(); i++) {
+        pts.push_back(points[i].cast<float>());
+    }
+    pangolin::glDrawPoints(pts);
+}
+
 void MeshViewer::run() {
     // glewExperimental = GL_TRUE;
     pangolin::CreateWindowAndBind(viewer_name_, width_, height_);
@@ -90,6 +102,8 @@ void MeshViewer::run() {
 
     create_menu_panel();
 
+    bool var_pause = false;
+
     while(!isFinished_) {
         std::chrono::microseconds(1000);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -104,6 +118,17 @@ void MeshViewer::run() {
             draw_current_mesh();
         }
 
+        if(*menu_show_GT_) {
+            draw_current_gt_pc();
+        }
+
+        if(*menu_pause_ != var_pause) {
+            var_pause = *menu_pause_;
+            if(var_pause)
+                db_->setPause();
+            else
+                db_->setUnpause();
+        }
         // // Setzen Sie die Größe des Punktes
         // glPointSize(10.0f);
 
@@ -112,12 +137,19 @@ void MeshViewer::run() {
         // glVertex3f(0.0f, 0.0f, 1.0f); // Der Punkt wird vor der Kamera positioniert (z.B. 1 Einheit vor der Kamera)
         // glEnd();
         // // pangolin::glDrawColouredCube();
+        
+        // if (*menu_pause_ == true) {
+        //     db_->setPause();
+        // }
+        
         pangolin::FinishFrame();
 
         if (*menu_terminate_ || pangolin::ShouldQuit()) {
             request_terminate();
         }
     }
+
+    // pangolin::QuitAll();
 }
 
 };// Namespace

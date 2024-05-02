@@ -15,7 +15,7 @@ SfTGT::SfTGT(const YAML::Node &config) : config_(config) {
 
 // open3d::io::ReadPointCloud("/home/anonym/Schreibtisch/PhD/code/Sparse Template based Reconstruction/data/phi_SfT/real/S1/point_clouds/point_cloud_000.ply", *test);
 
-void SfTGT::compareWithGroundTruth(std::vector<Eigen::Vector3d> vertices, std::vector<Eigen::Vector3i> triangles) {
+void SfTGT::compareWithGroundTruth(std::vector<Eigen::Vector3d> vertices, std::vector<Eigen::Vector3i> triangles, std::vector<Eigen::Vector3d> &gt_pc) {
     open3d::geometry::TriangleMesh tmp;
     std::shared_ptr<open3d::geometry::TriangleMesh> mesh = std::make_shared<open3d::geometry::TriangleMesh>(tmp);
     mesh->vertices_ = vertices;
@@ -30,6 +30,7 @@ void SfTGT::compareWithGroundTruth(std::vector<Eigen::Vector3d> vertices, std::v
     // open3d::io::ReadPointCloud("/home/anonym/Schreibtisch/PhD/code/Sparse Template based Reconstruction/data/phi_SfT/real/S1/point_clouds/point_cloud_" + result + ".ply", *pc);
     open3d::io::ReadPointCloud(path_ + result + ".ply", *pc);
     std::vector<Eigen::Vector3d> tmp1;
+    gt_pc.clear();
     for (int i=0;i<pc->points_.size();i++) {
         Eigen::Vector3d point = pc->points_[i];
         double x = point.x();
@@ -38,6 +39,7 @@ void SfTGT::compareWithGroundTruth(std::vector<Eigen::Vector3d> vertices, std::v
         if ((x == 0) && (y==0) && (z==0))
             continue;
         tmp1.push_back(pc->points_[i]);
+        gt_pc.push_back(pc->points_[i]);
     }
     pc->points_ = tmp1;
     open3d::t::geometry::TriangleMesh t_mesh = open3d::t::geometry::TriangleMesh::FromLegacy(*mesh);

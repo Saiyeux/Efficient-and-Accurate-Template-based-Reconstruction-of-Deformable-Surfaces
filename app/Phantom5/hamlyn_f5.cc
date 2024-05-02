@@ -47,17 +47,18 @@ int main() {
     System *sys = new System(triangles, vertices, frame, config, gt); 
     
     
+    bool isTerminated = false;
     
-    while(1) {
+    while(isTerminated) {
         if(frame.empty())
             break;
-        sys->monocular_feed(frame);
+        isTerminated = sys->monocular_feed(frame);
 
         int key = cv::waitKey(1);
         if (key == 'q')
         {
             std::cout << "q key is pressed by the user. Stopping the video" << std::endl;
-            break;
+            isTerminated = true;
         }
         cap >> frame;
 

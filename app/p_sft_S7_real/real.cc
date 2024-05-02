@@ -62,13 +62,13 @@ int main() {
 
     bool end = false;
     bool only_once = config["Phi_SfT"]["only_once"].as<bool>();
-
-    while(!end){
+    bool isTerminated = false;
+    while(!end && !isTerminated){
         frame = cv::imread(img_file_path + "000.png", cv::IMREAD_COLOR);
-        for (int num_img=1;num_img < max_number; num_img++) {
+        for (int num_img=1;num_img < max_number && !isTerminated; num_img++) {
             
             
-            sys->monocular_feed(frame);
+            isTerminated = sys->monocular_feed(frame);
             std::stringstream ss;
             ss << std::setw(3) << std::setfill('0') << num_img;
             std::string result = ss.str();
@@ -80,14 +80,14 @@ int main() {
             {
                 std::cout << "q key is pressed by the user. Stopping the video" << std::endl;
                 end = true;
-                break;
+                isTerminated = true;
             }
             
             
         }
 
         if(only_once)
-            break;
+            isTerminated = true;
         
     }
     
