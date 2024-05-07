@@ -3,7 +3,7 @@ System:
   video_file_path: "../data/HamlynDatasetShort/f5phantom/f5_dynamic_deint_L.avi"
   reference_file_path: "../data/HamlynDatasetShort/f5phantom/f5/heartDepthMap_"
 
-  optimization_algorithm: 0
+  optimization_algorithm: 3
   # 0: normal
   # 1: Distance Only
   # 2: Normal with only the vertices as reporjection
@@ -27,7 +27,7 @@ Image:
   k3: 0.0
 
 Preprocessing:
-  create_mask: true
+  create_mask: false
   brightness_threshold: 70
   width_min: 2
   width_max: 360

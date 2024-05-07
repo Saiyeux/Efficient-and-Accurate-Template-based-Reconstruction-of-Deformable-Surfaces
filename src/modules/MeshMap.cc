@@ -3,6 +3,7 @@
 #include "Optimizer.h"
 #include "OptimizerWithoutMiddlePoint.h"
 #include "OptimizerDistanceOnly.h"
+#include "OptimizerVB.h"
 
 
 namespace stbr {
@@ -16,6 +17,9 @@ MeshMap::MeshMap(std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vect
                 optimizerDistance_ = new OptimizerDistanceOnly(max_iteration, vertices, triangles_, K, verbose);
             else if (optimization_algorithm_ == 2)
                 optimizeWithout_ = new OptimizerWithoutMiddlePoint(max_iteration, vertices_, triangles_, verbose, K_);
+            else if (optimization_algorithm_ == 3)
+                optimizerVB_ = new OptimizerVB(max_iteration, vertices_, triangles_, verbose, K_);
+    
                 
         }
 
@@ -44,6 +48,9 @@ MeshMap::MeshMap(std::vector<Eigen::Vector3d> vertices, std::vector<Eigen::Vecto
         optimizerDistance_ = new OptimizerDistanceOnly(max_iteration, vertices_, triangles_, K_, verbose);
     else if (optimization_algorithm_ == 2)
         optimizeWithout_ = new OptimizerWithoutMiddlePoint(max_iteration, vertices_, triangles_, verbose, K_);
+    else if (optimization_algorithm_ == 3)
+        optimizerVB_ = new OptimizerVB(max_iteration, vertices_, triangles_, verbose, K_);
+    
 }
 
 MeshMap::~MeshMap() {
@@ -137,6 +144,11 @@ void MeshMap::unordered_map() {
         optimizeWithout_->initialize();
         optimizeWithout_->run();
         optimizeWithout_->getVertices(vertices_);
+    } else if (optimization_algorithm_ == 3) {
+        optimizerVB_->setParamater(&obs_[0], vertices_unordered_mapping_, triangle_unordered_mapping_, vertices_unordered_mapping_.size(), triangle_unordered_mapping_.size(), obs_.size() / 6);
+        optimizerVB_->initialize();
+        optimizerVB_->run();
+        optimizerVB_->getVertices(vertices_);
     }
 }
 }

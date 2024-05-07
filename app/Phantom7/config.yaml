@@ -2,11 +2,12 @@ System:
   video_file_path: "../data/HamlynDatasetShort/f7phantom/f7_dynamic_deint_L.avi"
   reference_file_path: "../data/HamlynDatasetShort/f7phantom/f7/heartDepthMap_"
 
-  optimization_algorithm: 0
-  # 0: normal
+  optimization_algorithm: 3
+  # 0: GN4
   # 1: Distance Only
-  # 2: Normal with only the vertices as reporjection
-  verbose: false
+  # 2: GN3
+  # 3: VB 
+  verbose: true
 
 Optimizer:
   max_iteration: 10

@@ -1,3 +1,6 @@
+#ifndef OPTIMIZERVB_H
+#define OPTIMIZERVB_H
+
 #include <Eigen/Core>
 #include <unordered_map>
 #include <vector>
@@ -8,8 +11,10 @@
 #include <random>
 #include <opencv2/opencv.hpp>
 #include <chrono>
+#include <omp.h>
+
 namespace stbr {
-struct OptimizerWithoutMiddlePoint_sba_crsm	
+struct OptimizerVB_sba_crsm	
 {
     int nr, nc;   
     int nnz;      
@@ -18,9 +23,9 @@ struct OptimizerWithoutMiddlePoint_sba_crsm
     int *rowptr;  
 };
 
-class OptimizerWithoutMiddlePoint {
+class OptimizerVB {
     public:
-        OptimizerWithoutMiddlePoint(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, bool verbose, Eigen::Matrix3d K);
+        OptimizerVB(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, bool verbose, Eigen::Matrix3d K);
 
         void setParamater(double *observation, std::unordered_map<int,int> &unordered_mapping_vertices, std::unordered_map<int,int> &unordered_mapping_triangles, int number_vertices, int number_triangles, int number_observation);
         void initialize();
@@ -28,23 +33,23 @@ class OptimizerWithoutMiddlePoint {
         void getVertices(std::vector<Eigen::Vector3d> &vertices);
 
     private:
-        void OptimizerWithoutMiddlePoint_sba_crsm_alloc(struct OptimizerWithoutMiddlePoint_sba_crsm *sm, int nr, int nc, int nnz);
-        void OptimizerWithoutMiddlePoint_sba_crsm_free(struct OptimizerWithoutMiddlePoint_sba_crsm *sm);
-        int OptimizerWithoutMiddlePoint_sba_crsm_elmidx(struct OptimizerWithoutMiddlePoint_sba_crsm *sm, int i, int j);
-        void constructSmask( OptimizerWithoutMiddlePoint_sba_crsm& Sidxij, int m, int& m_nS, char* m_smask);
+        void OptimizerVB_sba_crsm_alloc(struct OptimizerVB_sba_crsm *sm, int nr, int nc, int nnz);
+        void OptimizerVB_sba_crsm_free(struct OptimizerVB_sba_crsm *sm);
+        int OptimizerVB_sba_crsm_elmidx(struct OptimizerVB_sba_crsm *sm, int i, int j);
+        void constructSmask( OptimizerVB_sba_crsm& Sidxij, int m, int& m_nS, char* m_smask);
         void compute_reprojection_error(double *e, double *obs, double *xyz, int *faces, Eigen::Matrix3d &K, int num_obs);
         bool solveCholmodGN( int* Ap, int* Aii, bool init, bool ordering, int m_ncams, int nnz);
-        void constructCSSGN( int* Si, int* Sp, double* Sx, double* S, OptimizerWithoutMiddlePoint_sba_crsm& Sidxij, bool init, char* m_smask, int m_ncams);
+        void constructCSSGN( int* Si, int* Sp, double* Sx, double* S, OptimizerVB_sba_crsm& Sidxij, bool init, char* m_smask, int m_ncams);
         void constructAuxCSSGN( int *Ap, int *Aii, char* m_smask, int m_ncams);
-        void compute_reprojection_jacobian(double *V, double *g, double *error, double *obs, double *xyz, int *faces, Eigen::Matrix3d K, int num_obs, OptimizerWithoutMiddlePoint_sba_crsm& Sidxij);
-        void storeInV(double* V, int idx1, int idx2, double* J1, double* J2, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij);
-        void storeInV(double* V, int idx, double* J, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij);
+        void compute_reprojection_jacobian(double *V, double *g, double *error, double *obs, double *xyz, int *faces, Eigen::Matrix3d K, int num_obs, OptimizerVB_sba_crsm& Sidxij);
+        void storeInV(double* V, int idx1, int idx2, double* J1, double* J2, OptimizerVB_sba_crsm& Uidxij);
+        void storeInV(double* V, int idx, double* J, OptimizerVB_sba_crsm& Uidxij);
         void storeInG(double *g, double *J, double *e);
         void storeInG_distance(double *g, double *J, double *e);
         void compute_distance_error(double *error, double *xyz, double *ref,int *faces, int number_faces, int offset);
-        void compute_distance_jacobian(double *V, double *g, double *error, double *xyz, int *faces, int num_faces, int offset, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij);
-        void storeInV_distance(double* V, int idx, double* J, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij);
-        void storeInV_distance(double* V, int idx1, int idx2, double* J1, double* J2, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij);
+        void compute_distance_jacobian(double *V, double *g, double *error, double *xyz, int *faces, int num_faces, int offset, OptimizerVB_sba_crsm& Uidxij);
+        void storeInV_distance(double* V, int idx, double* J, OptimizerVB_sba_crsm& Uidxij);
+        void storeInV_distance(double* V, int idx1, int idx2, double* J1, double* J2, OptimizerVB_sba_crsm& Uidxij);
 
 
         int max_iteration_ = 10;
@@ -55,7 +60,7 @@ class OptimizerWithoutMiddlePoint {
         cholmod_factor *m_cholFactorS; 
         cholmod_common m_cS; 
         cholmod_dense  *m_cholSparseR, *m_cholSparseE;
-        struct OptimizerWithoutMiddlePoint_sba_crsm Sidxij;
+        struct OptimizerVB_sba_crsm Sidxij;
 
         std::vector<Eigen::Vector3d> e_vertices_;
         std::vector<Eigen::Vector3d> e_reference_;
@@ -93,18 +98,28 @@ class OptimizerWithoutMiddlePoint {
 
 };
 
-OptimizerWithoutMiddlePoint::OptimizerWithoutMiddlePoint(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, bool verbose, Eigen::Matrix3d K) : K_(K), max_iteration_(max_iteration), e_vertices_(vertices), e_triangles_(triangles), verbose_(verbose) {
+OptimizerVB::OptimizerVB(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, bool verbose, Eigen::Matrix3d K) : K_(K), max_iteration_(max_iteration), e_vertices_(vertices), e_triangles_(triangles), verbose_(verbose) {
     // create reference
     for(int i=0; i< e_vertices_.size(); i++)
         e_reference_.push_back(e_vertices_[i]);
+
+    observation_ = new double[vertices.size() * 2];
+    // int num_threads;
+    // #pragma omp parallel
+    // {
+    //     #pragma omp master
+    //     num_threads = omp_get_num_threads();
+    // }
+
+    // std::cout << "Number of threads: " << num_threads << std::endl; exit(1);
 }
 
-void OptimizerWithoutMiddlePoint::getVertices(std::vector<Eigen::Vector3d> &vertices) {
+void OptimizerVB::getVertices(std::vector<Eigen::Vector3d> &vertices) {
     vertices = e_vertices_;
 }
 
 
-void OptimizerWithoutMiddlePoint::run() {
+void OptimizerVB::run() {
 
     Eigen::Matrix3d K;
     K = K_;
@@ -241,12 +256,13 @@ void OptimizerWithoutMiddlePoint::run() {
         e_vertices_[e_triangle.z()].y() = vertices_[triangle[2]*3+1];
         e_vertices_[e_triangle.z()].z() = vertices_[triangle[2]*3+2];
     }
+    // std::cout << " asdasda\n"; exit(1);
 
     // for(int i=0;i<e_vertices_.size();i++) {
     //     if(e_vertices_[i].x() == e_reference_)
     // }
     
-    OptimizerWithoutMiddlePoint_sba_crsm_free(&Sidxij);
+    OptimizerVB_sba_crsm_free(&Sidxij);
 
 	cholmod_free_factor(&m_cholFactorS, &m_cS);              
 	cholmod_l_free_dense(&m_cholSparseE, &m_cS);
@@ -261,7 +277,6 @@ void OptimizerWithoutMiddlePoint::run() {
     free(error_);
     free(vertices_);
     free(reference_);
-
     // cv::waitKey(0);
     // std::shared_ptr<open3d::geometry::TriangleMesh> mesh = std::make_shared<open3d::geometry::TriangleMesh>();
 
@@ -277,7 +292,7 @@ void OptimizerWithoutMiddlePoint::run() {
     
 }
 
-void OptimizerWithoutMiddlePoint::initialize() {
+void OptimizerVB::initialize() {
     
     for(auto& unordered_map: triangle_unordered_mapping_) {
         Eigen::Vector3i triangle = e_triangles_[unordered_map.first];
@@ -308,6 +323,56 @@ void OptimizerWithoutMiddlePoint::initialize() {
         reference_[id * 3 + 1] = ref_vertex.y();
         reference_[id * 3 + 2] = ref_vertex.z();
     }
+
+    double tmp[number_vertices_*2];
+
+    for(int i=0; i<number_observation_;i++) {
+        
+        // Eigen::Vector3i triangle = triangles_[unordered_mapping_triangles[face_id]];
+        
+        // double u = observation_[i * 6 + 1];
+        // double v = observation_[i * 6 + 2];
+        double alpha = observation_[i * 6 + 3];
+        double beta = observation_[i * 6 + 4];
+        double gamma = observation_[i * 6 + 5];
+        
+
+        if((alpha < 0.99) && (beta < 0.99) && (gamma < 0.99)){
+            continue;
+        }
+
+        double u = observation_[i * 6 + 1];
+        double v = observation_[i * 6 + 2];
+
+        int face_id = triangle_unordered_mapping_[observation_[i * 6]];
+
+        int f1 = triangles_[face_id * 3 + 0];
+        int f2 = triangles_[face_id * 3 + 1];
+        int f3 = triangles_[face_id * 3 + 2];
+
+        if((alpha >= 0.99) && (beta < 0.99) && (gamma < 0.99)){
+            tmp[f1 * 2] = u;
+            tmp[f1 * 2 + 1] = v;
+            // test[f1] = true;
+        }
+        if((alpha < 0.99) && (beta >= 0.99) && (gamma < 0.99)){
+            tmp[f2 * 2] = u;
+            tmp[f2 * 2 + 1] = v;
+            // test[f2] = true;
+        }
+        if((alpha < 0.99) && (beta < 0.99) && (gamma >= 0.99)){
+            tmp[f3 * 2] = u;
+            tmp[f3 * 2 + 1] = v;
+            // test[f3] = true;
+        }
+        // counter++;
+        
+    }
+    for(int i=0;i<(number_vertices_*2); i++) {
+        observation_[i] = tmp[i];
+    }
+    number_observation_ = number_vertices_;
+
     
 
 
@@ -372,7 +437,70 @@ void OptimizerWithoutMiddlePoint::initialize() {
     // ordering_ = true;
 }
 
-void OptimizerWithoutMiddlePoint::setParamater(double *observation, std::unordered_map<int,int> &unordered_mapping_vertices, std::unordered_map<int,int> &unordered_mapping_triangles, int number_vertices, int number_triangles, int number_observation) {
+void OptimizerVB::setParamater(double *observation, std::unordered_map<int,int> &unordered_mapping_vertices, std::unordered_map<int,int> &unordered_mapping_triangles, int number_vertices, int number_triangles, int number_observation) {
+    // double tmp[number_vertices * 2];
+    // std::cout << number_observation << std::endl;
+    // std::cout << number_vertices << std::endl;
+    
+    // int counter = 0;
+    // bool test[333];
+    // for(int i=0;i<333;i++){
+    //     test[i] = false;
+    // }
+
+   
+    // for(int i=0; i<number_observation;i++) {
+        
+    //     int face_id = observation[i * 6];
+    //     Eigen::Vector3i triangle = e_triangles_[unordered_mapping_triangles[face_id]];
+
+    //     double u = observation[i * 6 + 1];
+    //     double v = observation[i * 6 + 2];
+    //     double alpha = observation[i * 6 + 3];
+    //     double beta = observation[i * 6 + 4];
+    //     double gamma = observation[i * 6 + 5];
+
+    //     int f1 = e_triangles_[triangle.x()].x();
+    //     int f2 = e_triangles_[triangle.y()].y();
+    //     int f3 = e_triangles_[triangle.z()].z();
+
+    //     if((alpha < 0.99) && (beta < 0.99) && (gamma < 0.99)){
+    //         continue;
+    //     }
+    //     if((alpha >= 0.99) && (beta < 0.99) && (gamma < 0.99)){
+    //         observation_[f1 * 2] = u;
+    //         observation_[f1 * 2 + 1] = v;
+    //         // test[f1] = true;
+    //     }
+    //     if((alpha < 0.99) && (beta >= 0.99) && (gamma < 0.99)){
+    //         observation_[f2 * 2] = u;
+    //         observation_[f2 * 2 + 1] = v;
+    //         // test[f2] = true;
+    //     }
+    //     if((alpha < 0.99) && (beta < 0.99) && (gamma >= 0.99)){
+    //         observation_[f3 * 2] = u;
+    //         observation_[f3 * 2 + 1] = v;
+    //         // test[f3] = true;
+    //     }
+    //     // counter++;
+        
+    // }
+    // for(int i=0;i<333;i++){
+    //     if (test[i] == false) {
+    //         std::cout << i << "\n";
+            
+    //     }
+    // }
+    // std::cout << "asda\n";
+    // exit(1);
+// std::cout << number_vertices << std::endl; exit(1);
+    // for(int i=0; i<(number_vertices); i++) {
+    //     // double temp = tmp[i];
+    //     // observation[i] = temp;
+    //     std::cout <<  observation_[i*2] << " " << observation_[i*2 + 1] <<std::endl;
+    // }
+    // exit(1);
+    
     observation_ = observation;
     vertices_unordered_mapping_ = unordered_mapping_vertices;
     triangle_unordered_mapping_ = unordered_mapping_triangles;
@@ -381,91 +509,43 @@ void OptimizerWithoutMiddlePoint::setParamater(double *observation, std::unorder
     number_observation_ = number_observation;
 }
 
-void OptimizerWithoutMiddlePoint::compute_reprojection_error(double *e, double *obs, double *xyz, int *faces, Eigen::Matrix3d &K, int num_obs) {
+void OptimizerVB::compute_reprojection_error(double *e, double *obs, double *xyz, int *faces, Eigen::Matrix3d &K, int num_obs) {
     // for(int i=0;i<333;i++) {
     //     double *v= &xyz[i*3];
     //     std::cout << v[0] <<" " << v[1] << " " << v[2] << "\n";
     // }
     // exit(1);
-    for(int obs_id=0; obs_id < num_obs; obs_id++) {
-        double alpha = obs[obs_id * 6 + 3];
-        double beta = obs[obs_id * 6 + 4];
-        double gamma = obs[obs_id * 6 + 5];
+    #pragma omp parallel for num_threads(4)
+    for(int obs_id=0; obs_id<num_obs; obs_id++) {
+    
+        double fx = K(0,0);
+        double fy = K(1,1);
+        double cx = K(0,2);
+        double cy = K(1,2);
 
-        if((alpha >= 0.99) || (beta >= 0.99) || (gamma >= 0.99)){
-            double fx = K(0,0);
-            double fy = K(1,1);
-            double cx = K(0,2);
-            double cy = K(1,2);
-            //  auto it = triangle_unordered_mapping_.find(obs[obs_id * 6]); // Suche nach dem Schlüssel 2
-            // if (it != triangle_unordered_mapping_.end()) {
-            //     std::cout << "Element gefunden! Wert: " << it->second << std::endl;
-            // } else {
-            //     std::cout << "Element nicht gefunden!" << std::endl;
-            // }
-            // std::cout << obs[obs_id * 6] << " " << obs[obs_id * 6 +1] << " " << obs[obs_id * 6 +2] << " " 
-            // << obs[obs_id * 6 +3] << " " << obs[obs_id * 6 + 4] << " " << obs[obs_id * 6 + 5] << " " << std::endl;
-            int face_id = triangle_unordered_mapping_[obs[obs_id * 6]];
-            int f1 = faces[face_id*3];
-            int f2 = faces[face_id*3+1];
-            int f3 = faces[face_id*3+2];
-
-            // double v1[] = {xyz[f1*3],xyz[f1*3+1],xyz[f1*3+2]};
-            double *v1= &xyz[f1*3];
-            // double v2 = {xyz[f2*3],xyz[f2*3+1],xyz[f2*3+2]};
-            double *v2 = &xyz[f2*3];
-            // double v3 = {xyz[f3*3],xyz[f3*3+1],xyz[f3*3+2]};
-            double *v3 = &xyz[f3*3];
-
-            
-
-            double z_u = obs[obs_id * 6 + 1];
-            double z_v = obs[obs_id * 6 + 2];
-
-            //  std::cout << v1[0] << " " << v1[1] << " " << v1[2] << std::endl;
-            
-            double p[3] = {v1[0] * alpha + v2[0]*beta + v3[0]*gamma,
-                        v1[1] * alpha + v2[1]*beta + v3[1]*gamma,
-                        v1[2] * alpha + v2[2]*beta + v3[2]*gamma};
-
-            double a = fx * p[0] / p[2] + cx;
-            double b = fy * p[1] / p[2] + cy;
-            double e_u = z_u - (fx * p[0] / p[2] + cx);
-            double e_v = z_v - (fy * p[1] / p[2] + cy);
+        double z_u = obs[obs_id * 2];
+        double z_v = obs[obs_id * 2 + 1];
+        // std::cout << obs[obs_id * 2] << " " << obs[obs_id * 2 + 1] << std::endl;
+        int vertex_id = obs_id;
+        double *v= &xyz[vertex_id*3];
 
         
-            e[obs_id*2 + 0] = e_u;
-            e[obs_id*2 + 1] = e_v;
+        // double a = fx * v[0] / v[2] + cx;
+        // double b = fy * v[1] / v[2] + cy;
+        double e_u = z_u - (fx * v[0] / v[2] + cx);
+        double e_v = z_v - (fy * v[1] / v[2] + cy);
 
-        }else {
-            e[obs_id*2 + 0] = 0;
-            e[obs_id*2 + 1] = 0;
-        }
-        
-        
+    
+        e[obs_id*2 + 0] = e_u;
+        e[obs_id*2 + 1] = e_v;
 
-        
-
-        // face_id = obs[obs_id * 6];
-        // f1 = e_triangles_[face_id].x();
-        // f2 = e_triangles_[face_id].y();
-        // f3 = e_triangles_[face_id].z();
-
-        // double *v1_n = e_vertices_[f1].data();
-        // double *v2_n = e_vertices_[f2].data();
-        // double *v3_n = e_vertices_[f3].data();
-        // if(!((v2[0] == v2_n[0]) && (v2[1] == v2_n[1]) && (v2[2] == v2_n[2])))
-        // {
-        //     std::cout << v1[0] << " " << v1[1] << " " << v1[2] << " "<< v2[0] << " " << v2[1] << " " << v2[2] << " "<< v3[0] << " " << v3[1] << " " << v3[2] << std::endl;
-        //     std::cout << v1_n[0] << " " << v1_n[1] << " " << v1_n[2] << " "<< v2_n[0] << " " << v2_n[1] << " " << v2_n[2] << " "<< v3_n[0] << " " << v3_n[1] << " " << v3_n[2] << std::endl<< std::endl;
-     
-        // }
-        // std::cout << v1[0] << " " << v1[1] << " " << v1[2] << " "<< v2[0] << " " << v2[1] << " " << v2[2] << " "<< v3[0] << " " << v3[1] << " " << v3[2] << std::endl;
-        // std::cout << v1_n[0] << " " << v1_n[1] << " " << v1_n[2] << " "<< v2_n[0] << " " << v2_n[1] << " " << v2_n[2] << " "<< v3_n[0] << " " << v3_n[1] << " " << v3_n[2] << std::endl<< std::endl;
+    
     }
+
+
 }
 
-void OptimizerWithoutMiddlePoint::OptimizerWithoutMiddlePoint_sba_crsm_alloc(struct OptimizerWithoutMiddlePoint_sba_crsm *sm, int nr, int nc, int nnz)
+void OptimizerVB::OptimizerVB_sba_crsm_alloc(struct OptimizerVB_sba_crsm *sm, int nr, int nc, int nnz)
 {
 	int msz;
 	sm->nr=nr;
@@ -474,14 +554,14 @@ void OptimizerWithoutMiddlePoint::OptimizerWithoutMiddlePoint_sba_crsm_alloc(str
 	msz=2*nnz+nr+1;
 	sm->val=(int *)malloc(msz*sizeof(int));  /* required memory is allocated in a single step */
 	if(!sm->val){
-		fprintf(stderr, "memory allocation request failed in OptimizerWithoutMiddlePoint_sba_crsm_alloc() [nr=%d, nc=%d, nnz=%d]\n", nr, nc, nnz);
+		fprintf(stderr, "memory allocation request failed in OptimizerVB_sba_crsm_alloc() [nr=%d, nc=%d, nnz=%d]\n", nr, nc, nnz);
 		exit(1);
 	}
 	sm->colidx=sm->val+nnz;
 	sm->rowptr=sm->colidx+nnz;
 }
 
-void OptimizerWithoutMiddlePoint::OptimizerWithoutMiddlePoint_sba_crsm_free(struct OptimizerWithoutMiddlePoint_sba_crsm *sm)
+void OptimizerVB::OptimizerVB_sba_crsm_free(struct OptimizerVB_sba_crsm *sm)
 {
 	 sm->nr=sm->nc=sm->nnz=-1;
 	free(sm->val);
@@ -489,7 +569,7 @@ void OptimizerWithoutMiddlePoint::OptimizerWithoutMiddlePoint_sba_crsm_free(stru
 }
 
 /* returns the index of the (i, j) element. No bounds checking! */ // from PBA
-int OptimizerWithoutMiddlePoint::OptimizerWithoutMiddlePoint_sba_crsm_elmidx(struct OptimizerWithoutMiddlePoint_sba_crsm *sm, int i, int j)
+int OptimizerVB::OptimizerVB_sba_crsm_elmidx(struct OptimizerVB_sba_crsm *sm, int i, int j)
 {
 	int low, high, mid, diff;
 
@@ -512,7 +592,7 @@ int OptimizerWithoutMiddlePoint::OptimizerWithoutMiddlePoint_sba_crsm_elmidx(str
 	return -1; /* not found */
 }
 
-void OptimizerWithoutMiddlePoint::constructSmask( OptimizerWithoutMiddlePoint_sba_crsm& Sidxij, int m, int& m_nS, char* m_smask)//, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij, char* m_umask)
+void OptimizerVB::constructSmask( OptimizerVB_sba_crsm& Sidxij, int m, int& m_nS, char* m_smask)//, OptimizerVB_sba_crsm& Uidxij, char* m_umask)
 {
 	int i, j, k, ii, jj;
     for ( i = 0; i < m*m; i++ )
@@ -524,7 +604,7 @@ void OptimizerWithoutMiddlePoint::constructSmask( OptimizerWithoutMiddlePoint_sb
 			m_nS += 1;
 		}
 	}	
-	OptimizerWithoutMiddlePoint_sba_crsm_alloc(&Sidxij, m, m, m_nS);
+	OptimizerVB_sba_crsm_alloc(&Sidxij, m, m, m_nS);
 	for(i=k=0; i<m; ++i)
 	{
 		Sidxij.rowptr[i]=k;
@@ -545,14 +625,14 @@ void OptimizerWithoutMiddlePoint::constructSmask( OptimizerWithoutMiddlePoint_sb
 
 
 
-void OptimizerWithoutMiddlePoint::storeInG_distance(double *g, double *J, double *e) {
+void OptimizerVB::storeInG_distance(double *g, double *J, double *e) {
     g[0] += -J[0]*e[0];
     g[1] += -J[1]*e[0];
     g[2] += -J[2]*e[0];
 
 }
 
-void OptimizerWithoutMiddlePoint::storeInV_distance(double* V, int idx1, int idx2, double* J1, double* J2, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij) {
+void OptimizerVB::storeInV_distance(double* V, int idx1, int idx2, double* J1, double* J2, OptimizerVB_sba_crsm& Uidxij) {
     int pos;
     double* ppUpa;
     double *JJ1, *JJ2;
@@ -560,11 +640,11 @@ void OptimizerWithoutMiddlePoint::storeInV_distance(double* V, int idx1, int idx
     if (idx1 < idx2) {
         JJ1 = J1;
         JJ2 = J2;
-        pos = OptimizerWithoutMiddlePoint_sba_crsm_elmidx( &Uidxij, idx1, idx2);
+        pos = OptimizerVB_sba_crsm_elmidx( &Uidxij, idx1, idx2);
     } else {
         JJ1 = J2;
         JJ2 = J1;
-        pos = OptimizerWithoutMiddlePoint_sba_crsm_elmidx( &Uidxij, idx2, idx1); 
+        pos = OptimizerVB_sba_crsm_elmidx( &Uidxij, idx2, idx1); 
     }
 
     if(pos == -1) {
@@ -583,11 +663,11 @@ void OptimizerWithoutMiddlePoint::storeInV_distance(double* V, int idx1, int idx
     
 }
 
-void OptimizerWithoutMiddlePoint::storeInV_distance(double* V, int idx, double* J, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij) {
+void OptimizerVB::storeInV_distance(double* V, int idx, double* J, OptimizerVB_sba_crsm& Uidxij) {
     int pos;
     double* ppUpa;
     double sum=0;	
-    pos = OptimizerWithoutMiddlePoint_sba_crsm_elmidx( &Uidxij, idx, idx);
+    pos = OptimizerVB_sba_crsm_elmidx( &Uidxij, idx, idx);
 
     if(pos == -1) {
         std::cerr << "Pos -1 in StoreInV" << std::endl; 
@@ -603,7 +683,7 @@ void OptimizerWithoutMiddlePoint::storeInV_distance(double* V, int idx, double* 
     ppUpa[8] += J[2] * J[2];
 }
 
-void OptimizerWithoutMiddlePoint::compute_distance_jacobian(double *V, double *g, double *error, double *xyz, int *faces, int num_faces, int offset, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij) {
+void OptimizerVB::compute_distance_jacobian(double *V, double *g, double *error, double *xyz, int *faces, int num_faces, int offset, OptimizerVB_sba_crsm& Uidxij) {
     int counter = 0;
     for(int i=0;i < num_faces; i++) {
         
@@ -678,7 +758,7 @@ void OptimizerWithoutMiddlePoint::compute_distance_jacobian(double *V, double *g
 }
 
 
-void OptimizerWithoutMiddlePoint::compute_distance_error(double *error, double *xyz, double *ref,int *faces, int number_faces, int offset) {
+void OptimizerVB::compute_distance_error(double *error, double *xyz, double *ref,int *faces, int number_faces, int offset) {
     int counter = 0;
     for(int i=0;i<number_faces; i++) {
         
@@ -716,7 +796,7 @@ void OptimizerWithoutMiddlePoint::compute_distance_error(double *error, double *
     }
 }
 
-void OptimizerWithoutMiddlePoint::storeInG(double *g, double *J, double *e) {
+void OptimizerVB::storeInG(double *g, double *J, double *e) {
     g[0] += -(J[0] * e[0] + J[3] * e[1]);
     g[1] += -(J[1] * e[0] + J[4] * e[1]);
     g[2] += -(J[2] * e[0] + J[5] * e[1]);
@@ -724,11 +804,11 @@ void OptimizerWithoutMiddlePoint::storeInG(double *g, double *J, double *e) {
     // cout << "" <<endl;
 }
 
-void OptimizerWithoutMiddlePoint::storeInV(double* V, int idx, double* J, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij) {
+void OptimizerVB::storeInV(double* V, int idx, double* J, OptimizerVB_sba_crsm& Uidxij) {
     int pos;
     double* ppUpa;
     double sum=0;	
-    pos = OptimizerWithoutMiddlePoint_sba_crsm_elmidx( &Uidxij, idx, idx);
+    pos = OptimizerVB_sba_crsm_elmidx( &Uidxij, idx, idx);
     
     if(pos == -1) {
         std::cerr << "Pos -1 in StoreInV" << std::endl; 
@@ -752,7 +832,7 @@ void OptimizerWithoutMiddlePoint::storeInV(double* V, int idx, double* J, Optimi
     // exit(1);
 }
 
-void OptimizerWithoutMiddlePoint::storeInV(double* V, int idx1, int idx2, double* J1, double* J2, OptimizerWithoutMiddlePoint_sba_crsm& Uidxij) {
+void OptimizerVB::storeInV(double* V, int idx1, int idx2, double* J1, double* J2, OptimizerVB_sba_crsm& Uidxij) {
     int pos;
     double* ppUpa;
     double *JJ1, *JJ2;
@@ -760,11 +840,11 @@ void OptimizerWithoutMiddlePoint::storeInV(double* V, int idx1, int idx2, double
     if (idx1 < idx2) {
         JJ1 = J1;
         JJ2 = J2;
-        pos = OptimizerWithoutMiddlePoint_sba_crsm_elmidx( &Uidxij, idx1, idx2);
+        pos = OptimizerVB_sba_crsm_elmidx( &Uidxij, idx1, idx2);
     } else {
         JJ1 = J2;
         JJ2 = J1;
-        pos = OptimizerWithoutMiddlePoint_sba_crsm_elmidx( &Uidxij, idx2, idx1); 
+        pos = OptimizerVB_sba_crsm_elmidx( &Uidxij, idx2, idx1); 
     }
     if(pos == -1) {
         std::cerr << "Pos -1 in StoreInV" << std::endl; 
@@ -781,80 +861,49 @@ void OptimizerWithoutMiddlePoint::storeInV(double* V, int idx1, int idx2, double
     }
 }
 
-void OptimizerWithoutMiddlePoint::compute_reprojection_jacobian(double *V, double *g, double *error, double *obs, double *xyz, int *faces, Eigen::Matrix3d K, int num_obs, OptimizerWithoutMiddlePoint_sba_crsm& Sidxij) {
-    for(int obs_id=0; obs_id < num_obs; obs_id++) {
-        double alpha = obs[obs_id * 6 + 3];
-        double beta = obs[obs_id * 6 + 4];
-        double gamma = obs[obs_id * 6 + 5];
-
-        if ((alpha < 0.99) && (beta < 0.99) && (gamma < 0.99))
-            continue;
-
+void OptimizerVB::compute_reprojection_jacobian(double *V, double *g, double *error, double *obs, double *xyz, int *faces, Eigen::Matrix3d K, int num_obs, OptimizerVB_sba_crsm& Sidxij) {
+    #pragma omp parallel for num_threads(4)
+    for(int obs_id=0; obs_id<num_obs; obs_id++) {
         double fx = K(0,0);
         double fy = K(1,1);
         double cx = K(0,2);
         double cy = K(1,2);
+        int vertex_id = obs_id;
+        double *v= &xyz[vertex_id*3];
+        // double *v = &xyz[obs_id*3];
 
-        int face_id = triangle_unordered_mapping_[obs[obs_id * 6]];
-
-        int f1 = faces[face_id*3];
-        int f2 = faces[face_id*3+1];
-        int f3 = faces[face_id*3+2];
-
-        double *v1= &xyz[f1*3];
-        double *v2 = &xyz[f2*3];
-        double *v3 = &xyz[f3*3];
-
-        
-
-        double x = v1[0] * alpha + v2[0]*beta + v3[0]*gamma;
-        double y = v1[1] * alpha + v2[1]*beta + v3[1]*gamma;
-        double z = v1[2] * alpha + v2[2]*beta + v3[2]*gamma;
+        double x = v[0];
+        double y = v[1];
+        double z = v[2];
 
         double J1[6], J2[6], J3[6];
-        J1[0] = -fx/z * alpha;
+        J1[0] = -fx/z;
         J1[1] = 0;
-        J1[2] = fx*x/(z*z) * alpha;
+        J1[2] = fx*x/(z*z);
 
         J1[3] = 0;
-        J1[4] = -fy/z * alpha;
-        J1[5] = fy*y/(z*z) * alpha;
+        J1[4] = -fy/z;
+        J1[5] = fy*y/(z*z);
 
-        J2[0] = -fx/z * beta;
-        J2[1] = 0;
-        J2[2] = fx*x/(z*z) * beta;
+        storeInG(g+obs_id*3, J1, error+obs_id * 2);
+        // storeInG(g+f2*3, J2, error+obs_id * 2);
+        // storeInG(g+f3*3, J3, error+obs_id * 2);
 
-        J2[3] = 0;
-        J2[4] = -fy/z * beta;
-        J2[5] = fy*y/(z*z) * beta;
-
-        J3[0] = -fx/z * gamma;
-        J3[1] = 0;
-        J3[2] = fx*x/(z*z) * gamma;
-
-        J3[3] = 0;
-        J3[4] = -fy/z * gamma;
-        J3[5] = fy*y/(z*z) * gamma;
-
-        storeInG(g+f1*3, J1, error+obs_id * 2);
-        storeInG(g+f2*3, J2, error+obs_id * 2);
-        storeInG(g+f3*3, J3, error+obs_id * 2);
-
-        storeInV(V, f1, J1, Sidxij);
-        storeInV(V, f2, J2, Sidxij);
-        storeInV(V, f3, J3, Sidxij);
+        storeInV(V, obs_id, J1, Sidxij);
+        // storeInV(V, f2, J2, Sidxij);
+        // storeInV(V, f3, J3, Sidxij);
 
         // if(f1==1663 || f2==1663 || f3==1663 ){
         //     cout << "asdssda\n\n";
         // }        
 
-        storeInV(V, f1, f2, J1, J2, Sidxij);
-        storeInV(V, f1, f3, J1, J3, Sidxij);
-        storeInV(V, f2, f3, J2, J3, Sidxij);
+        // storeInV(V, f1, f2, J1, J2, Sidxij);
+        // storeInV(V, f1, f3, J1, J3, Sidxij);
+        // storeInV(V, f2, f3, J2, J3, Sidxij);
     }
 }
 
-void OptimizerWithoutMiddlePoint::constructAuxCSSGN( int *Ap, int *Aii, char* m_smask, int m_ncams)
+void OptimizerVB::constructAuxCSSGN( int *Ap, int *Aii, char* m_smask, int m_ncams)
 {
 	int* Cp = Ap;
 	int* Ci = Aii;
@@ -876,7 +925,7 @@ void OptimizerWithoutMiddlePoint::constructAuxCSSGN( int *Ap, int *Aii, char* m_
 	*Cp=nZ;
 }
 
-void OptimizerWithoutMiddlePoint::constructCSSGN( int* Si, int* Sp, double* Sx, double* S, OptimizerWithoutMiddlePoint_sba_crsm& Sidxij, bool init, char* m_smask, int m_ncams)
+void OptimizerVB::constructCSSGN( int* Si, int* Sp, double* Sx, double* S, OptimizerVB_sba_crsm& Sidxij, bool init, char* m_smask, int m_ncams)
 {
 	int ii, jj, jjj, k;
 	int pos1, m = m_ncams;
@@ -901,7 +950,7 @@ void OptimizerWithoutMiddlePoint::constructCSSGN( int* Si, int* Sp, double* Sx, 
 					if ((m_smask[jj*m+ii]==1))
 					{   
 
-						pos1 = OptimizerWithoutMiddlePoint_sba_crsm_elmidx( &Sidxij, jj, ii );
+						pos1 = OptimizerVB_sba_crsm_elmidx( &Sidxij, jj, ii );
 						ptr5 = S + pos1*9;
 						
 						if( ii == jj )
@@ -961,7 +1010,7 @@ void OptimizerWithoutMiddlePoint::constructCSSGN( int* Si, int* Sp, double* Sx, 
 				{
 					if ((m_smask[jj*m+ii]==1))
 					{
-						pos1 = OptimizerWithoutMiddlePoint_sba_crsm_elmidx( &Sidxij, jj, ii );
+						pos1 = OptimizerVB_sba_crsm_elmidx( &Sidxij, jj, ii );
 						ptr5 = S + pos1*9;
 
 						if( ii == jj )
@@ -987,7 +1036,7 @@ void OptimizerWithoutMiddlePoint::constructCSSGN( int* Si, int* Sp, double* Sx, 
 	}
 }
 
-bool OptimizerWithoutMiddlePoint::solveCholmodGN( int* Ap1, int* Aii1, bool init, bool ordering, int m_ncams, int nnz1)
+bool OptimizerVB::solveCholmodGN( int* Ap1, int* Aii1, bool init, bool ordering, int m_ncams, int nnz1)
 {
 	int i, j;
 	int m = m_ncams;
@@ -1077,3 +1126,5 @@ bool OptimizerWithoutMiddlePoint::solveCholmodGN( int* Ap1, int* Aii1, bool init
 	return true;
 }
 }
+
+#endif // OPTIMIZERVB_H

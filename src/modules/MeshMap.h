@@ -13,6 +13,7 @@ class Tracking;
 class Optimizer;
 class OptimizerDistanceOnly;
 class OptimizerWithoutMiddlePoint;
+class OptimizerVB;
 
 class MeshMap {
     public:
@@ -33,6 +34,7 @@ class MeshMap {
         Optimizer *optimizer_ = nullptr;
         OptimizerDistanceOnly *optimizerDistance_ = nullptr;
         OptimizerWithoutMiddlePoint *optimizeWithout_ = nullptr;
+        OptimizerVB *optimizerVB_ = nullptr;
 
         std::vector<double> obs_;
         std::vector<Eigen::Vector3d> vertices_;

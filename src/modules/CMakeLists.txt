@@ -12,6 +12,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
                       ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
                       LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 
+target_compile_options(${PROJECT_NAME} PRIVATE ${OpenMP_CXX_FLAGS})
+target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENMP)
+
 # target_compile_definitions(${PROJECT_NAME} PRIVATE pangolin_Viewer)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
@@ -30,7 +33,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
                                 Eigen3::Eigen
                                 Open3D::Open3D
                                 yaml-cpp
-                        
+                                OpenMP::OpenMP_CXX
                                 # pangolin_Viewer
                                 # ${PLOTUTILS_LIBRARIES}
                                 )

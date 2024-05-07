@@ -29,7 +29,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
                                 Eigen3::Eigen
                                 # Open3D::Open3D
                                 # yaml-cpp
-                        
+                                OpenMP::OpenMP_CXX
                                 # pangolin_Viewer
                                 # ${PLOTUTILS_LIBRARIES}
                                 )

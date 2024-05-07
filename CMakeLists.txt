@@ -79,6 +79,9 @@ endif()
 # yaml-cpp
 find_package(yaml-cpp REQUIRED)
 
+# OpenMP
+find_package(OpenMP REQUIRED)
+
 # find_package(Pangolin 0.8 REQUIRED)
 # if(NOT Pangolin_FOUND)
 #     message(FATAL_ERROR "Pangolin not found!")

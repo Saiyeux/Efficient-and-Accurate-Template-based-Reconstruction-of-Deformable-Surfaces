@@ -4,6 +4,7 @@ target_sources(${PROJECT_NAME}
                ${CMAKE_CURRENT_SOURCE_DIR}/Optimizer.cc ${CMAKE_CURRENT_SOURCE_DIR}/Optimizer.h
                ${CMAKE_CURRENT_SOURCE_DIR}/OptimizerWithoutMiddlePoint.cc ${CMAKE_CURRENT_SOURCE_DIR}/OptimizerWithoutMiddlePoint.h
                ${CMAKE_CURRENT_SOURCE_DIR}/OptimizerDistanceOnly.cc ${CMAKE_CURRENT_SOURCE_DIR}/OptimizerDistanceOnly.h
+               ${CMAKE_CURRENT_SOURCE_DIR}/OptimizerVB.cc ${CMAKE_CURRENT_SOURCE_DIR}/OptimizerVB.h
                )
 
 # Install headers

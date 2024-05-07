@@ -50,8 +50,10 @@ int main() {
     bool isTerminated = false;
     
     while(isTerminated) {
+
         if(frame.empty())
             break;
+        // std::cout << "asdasdasdsa\n";
         isTerminated = sys->monocular_feed(frame);
 
         int key = cv::waitKey(1);
