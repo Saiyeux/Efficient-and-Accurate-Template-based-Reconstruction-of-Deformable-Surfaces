@@ -30,7 +30,7 @@ int main() {
    
 
     // Config
-    const YAML::Node config = YAML::LoadFile("../app/colon_1/config.yaml");
+    const YAML::Node config = YAML::LoadFile("../app/colon_3/config.yaml");
      
     // Todo
     ColonGT* gt = new ColonGT(config);

@@ -4,6 +4,7 @@ target_sources(${PROJECT_NAME}
                ${CMAKE_CURRENT_SOURCE_DIR}/GroundTruth_compare.cc ${CMAKE_CURRENT_SOURCE_DIR}/GroundTruth_compare.h
                ${CMAKE_CURRENT_SOURCE_DIR}/HamlynGT.cc ${CMAKE_CURRENT_SOURCE_DIR}/HamlynGT.h
                ${CMAKE_CURRENT_SOURCE_DIR}/SfTGT.cc ${CMAKE_CURRENT_SOURCE_DIR}/SfTGT.h
+               ${CMAKE_CURRENT_SOURCE_DIR}/ColonGT.cc ${CMAKE_CURRENT_SOURCE_DIR}/ColonGT.h
                )
 
 # Install headers

@@ -64,6 +64,7 @@ class MeshViewer {
         std::unique_ptr<pangolin::Var<bool>> menu_pause_;
         std::unique_ptr<pangolin::Var<bool>> menu_show_GT_;
         std::unique_ptr<pangolin::Var<bool>> menu_show_mesh_;
+        std::unique_ptr<pangolin::Var<float>> menu_frm_size_;
         
         // // camera renderer
         std::unique_ptr<pangolin::OpenGlRenderState> s_cam_;

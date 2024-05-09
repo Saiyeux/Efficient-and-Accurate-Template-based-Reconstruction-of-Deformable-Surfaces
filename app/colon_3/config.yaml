@@ -1,6 +1,6 @@
 System:
-  video_file_path: "../data/Colonoscopy/Dataset1/YOS_"
-  reference_file_path: "../data/Colonoscopy/Dataset1/ref_mesh.obj"
+  video_file_path: "../data/Colonoscopy/Dataset3/QRW_"
+  reference_file_path: "../data/Colonoscopy/Dataset3/ref_mesh.obj"
 
   optimization_algorithm: 0
   # 0: normal
@@ -47,14 +47,14 @@ GT_Mesh:
   OrientNormalsConsistentTangentPlane: 10
   Poisson_depth: 9
   Poisson_width: 0.1
-  simplification: 4000
+  simplification: 500
   threshold: 6
 
 colonoscopy:
   max_number_frames: 59
   only_once: false
   start_id: 0
-  gt_path: "../data/Colonoscopy/Dataset1/YOS_depth"
+  gt_path: "../data/Colonoscopy/Dataset3/QRW_depth"
 
 # Hamlyn:
 #   FPS: 25

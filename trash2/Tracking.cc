@@ -215,7 +215,7 @@ void Tracking::track(cv::Mat &frame, std::vector<cv::Point2f> &pixel) {
     updateObservation();
 
     this->draw_correspondence(modifiedFrame);
-
+    
     cv::imshow("Frame", modifiedFrame);
     pixel = pixel_correspondence_;
     

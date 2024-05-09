@@ -22,6 +22,7 @@ void MeshViewer::create_menu_panel() {
     menu_show_GT_ = std::unique_ptr<pangolin::Var<bool>>(new pangolin::Var<bool>("menu.Show GT", false, true));
     menu_pause_ = std::unique_ptr<pangolin::Var<bool>>(new pangolin::Var<bool>("menu.Pause", false, true));
     menu_terminate_ = std::unique_ptr<pangolin::Var<bool>>(new pangolin::Var<bool>("menu.Terminate", false, false));
+    menu_frm_size_ = std::unique_ptr<pangolin::Var<float>>(new pangolin::Var<float>("menu.Frame Size", 1.0, 1e-1, 1e1, true));
 }   
 
 void MeshViewer::request_terminate() {
@@ -46,8 +47,8 @@ void MeshViewer::draw_camera() const {
 }
 
 void MeshViewer::draw_frustum() const {
-    constexpr int image_width = 1080;
-    constexpr int image_height = 720;
+    constexpr int image_width = 1080 ;
+    constexpr int image_height = 720 ;
     constexpr float horizontal_fov = 2 * M_PI / 3; // 120 deg
     const float focal_length_pix = 0.5 * image_width / std::tan(0.5 * horizontal_fov);
     Eigen::Matrix3d Kinv = Eigen::Matrix3d::Identity();
@@ -55,7 +56,7 @@ void MeshViewer::draw_frustum() const {
     Kinv(1, 1) = 1.0 / focal_length_pix;
     Kinv(0, 2) = -0.5 * image_width / focal_length_pix;
     Kinv(1, 2) = -0.5 * image_height / focal_length_pix;
-    const float z = 0.1 / image_width * focal_length_pix;
+    const float z = *menu_frm_size_ / image_width * focal_length_pix;
     pangolin::glDrawFrustum(Kinv, image_width, image_height, z);
 }
 

@@ -227,7 +227,7 @@ void OptimizerVB::run() {
             // std::cout << "haha\n";
             total_time += duration.count();
             if(verbose_)
-                std::cout << "Itertation: " << iter <<" Error: " << sqrt(cost) << " dx: " << dx / num_points << " ed: " << ed << " Time: " << duration.count() << " Total time: " << total_time << std::endl;
+                std::cout << " VB Itertation: " << iter <<" Error: " << sqrt(cost) << " dx: " << dx / num_points << " ed: " << ed << " Time: " << duration.count() << " Total time: " << total_time << std::endl;
 
                 // std::cout << "Itertation: " << iter <<" Error: " << sqrt(cost) << " dx: " << dx / num_points <<" er: " << er << " ed: " << ed << " Time: " << duration.count() << std::endl;
 

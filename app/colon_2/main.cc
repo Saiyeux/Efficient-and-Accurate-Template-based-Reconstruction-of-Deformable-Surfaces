@@ -30,7 +30,7 @@ int main() {
    
 
     // Config
-    const YAML::Node config = YAML::LoadFile("../app/colon_1/config.yaml");
+    const YAML::Node config = YAML::LoadFile("../app/colon_2/config.yaml");
      
     // Todo
     ColonGT* gt = new ColonGT(config);
@@ -63,7 +63,8 @@ int main() {
 
     while(!end && !isTerminated){
 
-        frame = cv::imread(img_file_path + s_start_id + ".png", cv::IMREAD_COLOR);
+        frame = cv::imread(img_file_path + ss.str() + ".png", cv::IMREAD_COLOR);
+        
         for (int num_img=1;num_img < max_number && !isTerminated; num_img++) {
             
             // std::cout << frame.size() << std::endl;
@@ -76,8 +77,7 @@ int main() {
             // cv::rotate(frame, frame, cv::ROTATE_180);
             // std::cout << frame << std::endl;
             // std::cout << img_file_path + result + ".png" << std::endl;
-            // std::cout << img_file_path + result + ".png" << std::endl;
-            int key = cv::waitKey(1);
+            int key = cv::waitKey(10);
             if (key == 'q')
             {
                 std::cout << "q key is pressed by the user. Stopping the video" << std::endl;

@@ -127,8 +127,11 @@ void MeshMap::unordered_map() {
         triangles.push_back(vertices_unordered_mapping_[triangle.z()]);
     }
 
-
-
+    // std::cout << vertices_.size() << " " << triangles_.size() << std::endl;
+    // std::cout << vertices_unordered_mapping_.size() << " " << triangle_unordered_mapping_.size() << std::endl;
+    
+    // exit(1);
+    
     if(optimization_algorithm_ == 0) {
         optimizer_->setParamater(&obs_[0], vertices_unordered_mapping_, triangle_unordered_mapping_, vertices_unordered_mapping_.size(), triangle_unordered_mapping_.size(), obs_.size() / 6);
         optimizer_->initialize();

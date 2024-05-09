@@ -202,7 +202,7 @@ void Tracking::track(cv::Mat &frame) {
     updateObservation();
 
     this->draw_correspondence(modifiedFrame);
-
+    cv::resize(modifiedFrame, modifiedFrame, cv::Size(), config_["Image"]["scale"].as<double>(), config_["Image"]["scale"].as<double>());
     cv::imshow("Frame", modifiedFrame);
 
 }

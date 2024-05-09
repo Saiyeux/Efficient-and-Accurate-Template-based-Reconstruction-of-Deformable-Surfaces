@@ -1,7 +1,13 @@
 set(EXECUTABLE_TARGETS "")
 
-# add_executable(colon_1 colon_1/main.cc)
-# list(APPEND EXECUTABLE_TARGETS colon_1)
+add_executable(colonscopy_1 colon_1/main.cc)
+list(APPEND EXECUTABLE_TARGETS colonscopy_1)
+
+add_executable(colonscopy_2 colon_2/main.cc)
+list(APPEND EXECUTABLE_TARGETS colonscopy_2)
+
+add_executable(colonscopy_3 colon_3/main.cc)
+list(APPEND EXECUTABLE_TARGETS colonscopy_3)
 
 add_executable(hamlyn_f7 Phantom7/hamlyn_f7.cc)
 list(APPEND EXECUTABLE_TARGETS hamlyn_f7)

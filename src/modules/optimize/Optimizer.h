@@ -96,6 +96,8 @@ class Optimizer {
 
 Optimizer::Optimizer(int max_iteration, std::vector<Eigen::Vector3d> &vertices, std::vector<Eigen::Vector3i> &triangles, bool verbose, Eigen::Matrix3d K) : K_(K), verbose_(verbose), max_iteration_(max_iteration), e_vertices_(vertices), e_triangles_(triangles) {
     // create reference
+    // std::cout << vertices.size() << " " << triangles.size() << std::endl; //exit(1);
+
     for(int i=0; i< e_vertices_.size(); i++)
         e_reference_.push_back(e_vertices_[i]);
 }
@@ -308,7 +310,7 @@ void Optimizer::initialize() {
         reference_[id * 3 + 2] = ref_vertex.z();
     }
     
-
+    // std::cout << number_vertices_ << std::endl;
 
     v_mask_ = (char*)malloc(number_vertices_*number_vertices_*sizeof(char)); // v_mask initialisieren!
     memset( v_mask_, 0, number_vertices_*number_vertices_*sizeof(char) );

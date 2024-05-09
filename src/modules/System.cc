@@ -42,6 +42,7 @@ System::System(std::vector<Eigen::Vector3i> ref_triangles, std::vector<Eigen::Ve
     // viewer_->initImageParams(ref_img, tracking_->usable_triangles_, tracking_->usable_vertices_);
     // std::cout << "ini\n";
     // viewer_->run();
+
     viewing_thread_ = std::unique_ptr<std::thread>(new std::thread(&Viewer::MeshViewer::run, viewer_));
 }
 
