@@ -2,7 +2,7 @@ System:
   video_file_path: "../data/Colonoscopy/Dataset2/GRQ_"
   reference_file_path: "../data/Colonoscopy/Dataset2/ref_mesh.obj"
 
-  optimization_algorithm: 3
+  optimization_algorithm: 1
   # 0: normal
   # 1: Distance Only
   # 2: Normal with only the vertices as reporjection
@@ -26,7 +26,7 @@ Image:
   scale: 1
 
 Preprocessing:
-  create_mask: false
+  create_mask: true
   brightness_threshold: 0
   width_min: 100
   width_max: 400

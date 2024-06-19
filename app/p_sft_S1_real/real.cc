@@ -95,7 +95,7 @@ int main() {
         sum += element;
     }
     double average = static_cast<double>(sum) / gt->all_mean_.size();
-    std::cout <<std::endl << average << std::endl;
+    std::cout << "RMSE: " << std::endl << average << std::endl;
     
 
 

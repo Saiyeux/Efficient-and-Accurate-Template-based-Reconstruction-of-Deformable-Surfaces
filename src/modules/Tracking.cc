@@ -175,6 +175,8 @@ void Tracking::createMask(int thresholdValue) {
 }
 
 void Tracking::draw_correspondence(cv::Mat &frame) {
+
+
     for(uint i = 0; i < pixel_reference_.size(); i++)
     {   if (extraction->status[i] == 1) {
             cv::line(frame, pixel_correspondence_[i], pixel_reference_[i], cv::Scalar(0, 255, 0), 1);
@@ -202,6 +204,13 @@ void Tracking::track(cv::Mat &frame) {
     updateObservation();
 
     this->draw_correspondence(modifiedFrame);
+    static int ii=0;
+    // cv::imwrite("/home/anonym/Schreibtisch/PhD/code/Sparse Template based Reconstruction/data/tmp/" + std::to_string(ii) + ".png", modifiedFrame);
+    
+    if (ii == 1)
+        // cv::waitKey(0);
+
+    ii++;
     cv::resize(modifiedFrame, modifiedFrame, cv::Size(), config_["Image"]["scale"].as<double>(), config_["Image"]["scale"].as<double>());
     cv::imshow("Frame", modifiedFrame);
 

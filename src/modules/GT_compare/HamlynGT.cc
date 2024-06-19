@@ -14,10 +14,25 @@ HamlynGT::HamlynGT(const YAML::Node &config) : config_(config) {
 }
 
 void HamlynGT::compareWithGroundTruth(std::vector<Eigen::Vector3d> vertices, std::vector<Eigen::Vector3i> triangles, std::vector<Eigen::Vector3d> &gt_pc) {
+    // Erstellen eines TriangleMesh-Objekts
+    // static int cc = 0;
+    // std::string filename = "/home/anonym/Schreibtisch/PhD/code/Sparse Template based Reconstruction/data/f7_defslam_gt/" + std::to_string(cc) + ".obj";
+    // cc++;
+    // std::shared_ptr<open3d::geometry::TriangleMesh> mesh123;
+    //     // mesh = createRefMesh(config, gt_id);
+    //     mesh123 = open3d::io::CreateMeshFromFile(filename);
+    //     // int num = mesh123->vertices_.size();
+    //     mesh123->RemoveUnreferencedVertices();
+        // std::cout << num << " " << mesh123->vertices_.size() << std::endl;
+        // if(num != mesh123->vertices_.size())
+        //     std::cout << "asdas\n";
+    // exit(1);
+    
+
     open3d::geometry::TriangleMesh tmp;
     std::shared_ptr<open3d::geometry::TriangleMesh> mesh = std::make_shared<open3d::geometry::TriangleMesh>(tmp);
-    mesh->vertices_ = vertices;
-    mesh->triangles_ = triangles;
+    mesh->vertices_ = vertices;//mesh123->vertices_;
+    mesh->triangles_ = triangles;//mesh123->triangles_;
     uint gt_id = int(round((double(FrameNo_) / FPS_ + addition_)* mutliplier_)) % modulo_;
     auto pc = open3d::io::CreatePointCloudFromFile(path_ + std::to_string(gt_id) + ".txt", "xyz");
     std::vector<Eigen::Vector3d> tmp1;

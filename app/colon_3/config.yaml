@@ -2,7 +2,7 @@ System:
   video_file_path: "../data/Colonoscopy/Dataset3/QRW_"
   reference_file_path: "../data/Colonoscopy/Dataset3/ref_mesh.obj"
 
-  optimization_algorithm: 0
+  optimization_algorithm: 1
   # 0: normal
   # 1: Distance Only
   # 2: Normal with only the vertices as reporjection
@@ -52,8 +52,8 @@ GT_Mesh:
 
 colonoscopy:
   max_number_frames: 59
-  only_once: false
-  start_id: 0
+  only_once: true
+  start_id: 1
   gt_path: "../data/Colonoscopy/Dataset3/QRW_depth"
 
 # Hamlyn:

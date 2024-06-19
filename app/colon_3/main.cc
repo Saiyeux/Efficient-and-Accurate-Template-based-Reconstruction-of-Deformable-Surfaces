@@ -72,6 +72,7 @@ int main() {
             ss << std::setw(5) << std::setfill('0') << num_img;
             std::string result = ss.str();
             // std::cout << img_file_path + result + ".png" << std::endl;
+            // std::cout <<"img num: " <<  num_img << std::endl;
             frame = cv::imread(img_file_path + result + ".png");
             // cv::rotate(frame, frame, cv::ROTATE_180);
             // std::cout << frame << std::endl;
@@ -98,7 +99,8 @@ int main() {
         sum += element;
     }
     double average = static_cast<double>(sum) / gt->all_mean_.size();
-    std::cout << average << std::endl;
+    std::cout << "RME: " << average << std::endl;
+
     
 
 

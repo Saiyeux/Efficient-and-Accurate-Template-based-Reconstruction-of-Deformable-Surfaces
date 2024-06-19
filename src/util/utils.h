@@ -131,10 +131,10 @@ namespace utils {
         vis.AddGeometry(mesh);
         vis.Run();
         vis.DestroyVisualizerWindow();
-        exit(1);
+        // exit(1);
         // open3d::visualization::DrawGeometries({pcd});
-        cv::imshow("asd", cv::imread(file));
-        cv::waitKey(0);
+        // cv::imshow("asd", cv::imread(file));
+        // cv::waitKey(0);
     }
 
 
@@ -198,7 +198,12 @@ namespace utils {
 
         for(int i=0; i<mesh->triangles_.size();i++)
             triangles.push_back(mesh->triangles_[i]);
+    
+    
+    // open3d::io::WriteTriangleMesh("output_mesh.ply", *mesh);
+    // exit(1);
     }
+    
 }
 
 #endif 

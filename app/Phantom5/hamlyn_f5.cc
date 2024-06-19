@@ -49,8 +49,8 @@ int main() {
     
     bool isTerminated = false;
     
-    while(isTerminated) {
-
+    while(!isTerminated) {
+        // std::cout << frame << std::endl;
         if(frame.empty())
             break;
         // std::cout << "asdasdasdsa\n";

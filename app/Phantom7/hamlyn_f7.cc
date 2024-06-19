@@ -53,7 +53,11 @@ int main() {
     
     // int i=0;
     bool isTerminated = false;
+    int num_img = 0;
     while(!isTerminated) {
+        
+        std::cout <<"img num: " <<  num_img << std::endl;
+        num_img++;
         if(frame.empty())
             break;
         isTerminated = sys->monocular_feed(frame);
