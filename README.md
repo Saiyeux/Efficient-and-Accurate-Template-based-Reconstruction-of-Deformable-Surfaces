@@ -1,26 +1,4 @@
-<h1> Sparse Template Based Reconstruction </h1>
-
-# Todo 
-* Todo heute
-    * Commenting all files in App
-    * Commenting all files in src
-    * Provide used data
-    * insert Acknowledgments and references
-
-
-* Code optimization -> output has to be a bit clearer
-* Provide used data
-
-* Troubleshooting with docker
-* Acknowledgments
-    * Which work did I use
-        * ParallaxBA
-        * DefSLAM
-        * phi-SfT
-        * Robust-SfT
-    * Which data did I use
-* commenting
-
+<h1> Efficient and Accurate Template-based Reconstruction of Deformable Surfaces </h1>
 
 
 # 1. Overview
