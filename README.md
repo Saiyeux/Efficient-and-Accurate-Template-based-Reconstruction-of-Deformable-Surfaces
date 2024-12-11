@@ -2,7 +2,7 @@
 
 
 # 1. Overview
-![Alternativer Text](./data/image.png)
+![Error with the image. Please reload the website](./doc/Data2.gif)
 
 
 # 2. Acknowledgements
