@@ -17,26 +17,42 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENMP)
 
 # target_compile_definitions(${PROJECT_NAME} PRIVATE pangolin_Viewer)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE
-                                pangolin_viewer 
-                                ${OpenCV_LIBS}
-                                Threads::Threads
-                                opencv_imgcodecs
-                                opencv_videoio
-                                opencv_core
-                                opencv_features2d
-                                opencv_calib3d
-                                # pangolin
-                                ${CHOLMOD_LIBRARIES} 
-                                ${BLAS_LIBRARIES}
-                                ${LAPACK_LIBRARIES}
-                                Eigen3::Eigen
-                                Open3D::Open3D
-                                yaml-cpp
-                                OpenMP::OpenMP_CXX
-                                # pangolin_Viewer
-                                # ${PLOTUTILS_LIBRARIES}
-                                )
+if(BLAS_FOUND AND LAPACK_FOUND)
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        pangolin_viewer
+        ${OpenCV_LIBS}
+        Threads::Threads
+        opencv_imgcodecs
+        opencv_videoio
+        opencv_core
+        opencv_features2d
+        opencv_calib3d
+        ${CHOLMOD_LIBRARIES}
+        # ${BLAS_LIBRARIES}
+        # ${LAPACK_LIBRARIES}
+        Eigen3::Eigen
+        Open3D::Open3D
+        yaml-cpp
+        OpenMP::OpenMP_CXX
+    )
+else()
+    message(WARNING "BLAS or LAPACK not found, skipping BLAS/LAPACK linkage")
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        pangolin_viewer
+        ${OpenCV_LIBS}
+        Threads::Threads
+        opencv_imgcodecs
+        opencv_videoio
+        opencv_core
+        opencv_features2d
+        opencv_calib3d
+        ${CHOLMOD_LIBRARIES}
+        Eigen3::Eigen
+        Open3D::Open3D
+        yaml-cpp
+        OpenMP::OpenMP_CXX
+    )
+endif()
 
 # Include directories
 target_include_directories(${PROJECT_NAME}

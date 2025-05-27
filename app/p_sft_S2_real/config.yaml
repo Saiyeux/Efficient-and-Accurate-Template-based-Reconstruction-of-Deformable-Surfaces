@@ -26,6 +26,8 @@ Image:
   p2: 0.0
   k3: 0.0
 
+  scale: 1.0
+
 Preprocessing:
   create_mask: false
   brightness_threshold: 0
